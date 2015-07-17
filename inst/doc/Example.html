@@ -92,25 +92,26 @@ data &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt"
 
 <span class="co"># Fit model</span>
 fit &lt;-<span class="st"> </span><span class="kw">stan</span>(<span class="st">&quot;logistic.stan&quot;</span>, <span class="dt">data =</span> data) <span class="co"># defaults to iter = 2000, chains = 4</span></code></pre>
-<p>and then use the <strong>loo</strong> package to compute LOO and WAIC:</p>
+<p>and then use the <strong>loo</strong> package to compute LOO.</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&quot;loo&quot;</span>)
 
-<span class="co"># Extract log-likelihood and compute LOO, WAIC</span>
+<span class="co"># Extract log-likelihood and compute LOO</span>
 log_lik &lt;-<span class="st"> </span><span class="kw">extract_log_lik</span>(fit)
-loo &lt;-<span class="st"> </span><span class="kw">loo_and_waic</span>(log_lik)
-<span class="kw">print</span>(loo)
-<span class="co"># loo and waic are the same out to several decimal places for this model</span>
-<span class="kw">print</span>(loo, <span class="dt">digits =</span> <span class="dv">4</span>) </code></pre>
+loo1 &lt;-<span class="st"> </span><span class="kw">loo</span>(log_lik) <span class="co"># or waic(log_lik) to compute WAIC</span>
+loo1
+<span class="kw">print</span>(loo1, <span class="dt">digits =</span> <span class="dv">4</span>)</code></pre>
 <p><br></p>
-<p>To compare this model to alternative model for the same data we can use the <code>loo_and_waic_diff</code> function.</p>
+<p>To compare this model to alternative model for the same data we can use the <code>compare</code> function.</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="co"># First run a second model using log(arsenic) instead of arsenic</span>
 data$X[,<span class="st">&quot;arsenic&quot;</span>] &lt;-<span class="st"> </span><span class="kw">log</span>(data$X[,<span class="st">&quot;arsenic&quot;</span>])
 fit2 &lt;-<span class="st"> </span><span class="kw">stan</span>(<span class="dt">fit =</span> fit, <span class="dt">data =</span> data)
 log_lik2 &lt;-<span class="st"> </span><span class="kw">extract_log_lik</span>(fit2)
-loo2 &lt;-<span class="st"> </span><span class="kw">loo_and_waic</span>(log_lik2)
+loo2 &lt;-<span class="st"> </span><span class="kw">loo</span>(log_lik2)
 
-<span class="co"># Compare using loo_and_waic_diff</span>
-diff &lt;-<span class="st"> </span><span class="kw">loo_and_waic_diff</span>(loo, loo2)</code></pre>
+<span class="co"># Compare</span>
+diff &lt;-<span class="st"> </span><span class="kw">compare</span>(loo1, loo2) 
+diff
+<span class="kw">print</span>(diff, <span class="dt">digits =</span> <span class="dv">3</span>)</code></pre>
 </div>
 <div id="references" class="section level3">
 <h3>References</h3>

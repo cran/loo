@@ -13,20 +13,21 @@
 ## ---- eval=FALSE---------------------------------------------------------
 #  library("loo")
 #  
-#  # Extract log-likelihood and compute LOO, WAIC
+#  # Extract log-likelihood and compute LOO
 #  log_lik <- extract_log_lik(fit)
-#  loo <- loo_and_waic(log_lik)
-#  print(loo)
-#  # loo and waic are the same out to several decimal places for this model
-#  print(loo, digits = 4)
+#  loo1 <- loo(log_lik) # or waic(log_lik) to compute WAIC
+#  loo1
+#  print(loo1, digits = 4)
 
 ## ---- eval=FALSE---------------------------------------------------------
 #  # First run a second model using log(arsenic) instead of arsenic
 #  data$X[,"arsenic"] <- log(data$X[,"arsenic"])
 #  fit2 <- stan(fit = fit, data = data)
 #  log_lik2 <- extract_log_lik(fit2)
-#  loo2 <- loo_and_waic(log_lik2)
+#  loo2 <- loo(log_lik2)
 #  
-#  # Compare using loo_and_waic_diff
-#  diff <- loo_and_waic_diff(loo, loo2)
+#  # Compare
+#  diff <- compare(loo1, loo2)
+#  diff
+#  print(diff, digits = 3)
 
