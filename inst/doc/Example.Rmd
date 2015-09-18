@@ -10,7 +10,7 @@ vignette: >
 
 *The following is excerpted (with minor edits) from our paper Vehtari, A.,
 Gelman, A., and Gabry, J. (2015). Efficient implementation of leave-one-out 
-cross-validation and WAIC for evaluating fitted Bayesian models.*
+cross-validation and WAIC for evaluating fitted Bayesian models.* ([preprint here](http://arxiv.org/abs/1507.04544))
 
 <br>
 
@@ -115,4 +115,4 @@ Gelman, A., and Hill, J. (2007).  *Data Analysis Using Regression and Multilevel
 
 Stan Development Team (2015a). Stan: A C++ library for probability and sampling, version 2.6. http://mc-stan.org
 
-Stan Development Team (2015b). RStan, version 2.6. http://mc-stan.org/rstan.html.
+Stan Development Team (2015b). RStan, version 2.6. http://mc-stan.org/interfaces/rstan.html

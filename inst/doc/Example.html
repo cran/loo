@@ -53,7 +53,7 @@ code > span.er { color: #ff0000; font-weight: bold; }
 
 <div id="using-the-loo-package" class="section level1">
 <h1>Using the <strong>loo</strong> package</h1>
-<p><em>The following is excerpted (with minor edits) from our paper Vehtari, A., Gelman, A., and Gabry, J. (2015). Efficient implementation of leave-one-out cross-validation and WAIC for evaluating fitted Bayesian models.</em></p>
+<p><em>The following is excerpted (with minor edits) from our paper Vehtari, A., Gelman, A., and Gabry, J. (2015). Efficient implementation of leave-one-out cross-validation and WAIC for evaluating fitted Bayesian models.</em> (<a href="http://arxiv.org/abs/1507.04544">preprint here</a>)</p>
 <p><br></p>
 <p>This example comes from a survey of residents from a small area in Bangladesh that was affected by arsenic in drinking water. Respondents with elevated arsenic levels in their wells were asked if they were interested in getting water from a neighbor’s well, and a series of logistic regressions were fit to predict this binary response given various information about the households (Gelman and Hill, 2007). Here we fit a model for the well-switching response given two predictors: the arsenic level of the water in the resident’s home, and the distance of the house from the nearest safe well.</p>
 <p>The sample size in this example is <span class="math">\(N=3020\)</span>, which is not huge but is large enough that it is important to have a computational method for LOO that is fast for each data point. On the plus side, with such a large dataset, the influence of any given observation is small, and so the computations should be stable.</p>
@@ -117,7 +117,7 @@ diff
 <h3>References</h3>
 <p>Gelman, A., and Hill, J. (2007). <em>Data Analysis Using Regression and Multilevel Hierarchical Models.</em> Cambridge University Press.</p>
 <p>Stan Development Team (2015a). Stan: A C++ library for probability and sampling, version 2.6. <a href="http://mc-stan.org" class="uri">http://mc-stan.org</a></p>
-<p>Stan Development Team (2015b). RStan, version 2.6. <a href="http://mc-stan.org/rstan.html" class="uri">http://mc-stan.org/rstan.html</a>.</p>
+<p>Stan Development Team (2015b). RStan, version 2.6. <a href="http://mc-stan.org/interfaces/rstan.html" class="uri">http://mc-stan.org/interfaces/rstan.html</a></p>
 </div>
 </div>
 

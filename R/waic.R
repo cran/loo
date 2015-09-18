@@ -1,10 +1,8 @@
 #' Widely applicable information criterion (WAIC)
 #'
-#' @export
-#' @param log_lik an \eqn{S} by \eqn{N} matrix, where \eqn{S} is the size of the
-#'   posterior sample (the number of simulations) and \eqn{N} is the number of
-#'   data points. Typically (but not restricted to be) the object returned by
-#'   \code{\link{extract_log_lik}}.
+#' @export waic waic.matrix waic.function
+#' @inheritParams loo
+#' @param ... Other arguments. Currently ignored.
 #'
 #' @return A named list (of class \code{'loo'}) with components:
 #'
@@ -37,15 +35,24 @@
 #' print(waic_diff, digits = 2)
 #' }
 #'
-waic <- function(log_lik) {
-  if (!is.matrix(log_lik))
-    stop('log_lik should be a matrix')
-  pointwise <- pointwise_waic(log_lik)
-  out <- totals(pointwise)
-  nms <- names(pointwise)
-  names(out) <- c(nms, paste0("se_", nms))
-  out$pointwise <- cbind_list(pointwise)
-  attr(out, "log_lik_dim") <- dim(log_lik)
-  class(out) <- "loo"
-  out
+waic <- function(x, ...) {
+  UseMethod("waic")
+}
+
+#' @templateVar fn waic
+#' @template matrix
+#' @export
+#'
+waic.matrix <- function(x, ...) {
+  out <- pointwise_waic(log_lik = x)
+  structure(out, log_lik_dim = dim(x), class = "loo")
+}
+
+#' @templateVar fn waic
+#' @template function
+#' @export
+#'
+waic.function <- function(x, ..., args) {
+  out <- pointwise_waic(llfun = x, llargs = args)
+  structure(out, log_lik_dim = with(args, c(S,N)), class = "loo")
 }
