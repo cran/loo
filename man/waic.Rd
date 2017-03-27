@@ -2,8 +2,8 @@
 % Please edit documentation in R/waic.R
 \name{waic}
 \alias{waic}
-\alias{waic.function}
 \alias{waic.matrix}
+\alias{waic.function}
 \title{Widely applicable information criterion (WAIC)}
 \usage{
 waic(x, ...)
@@ -44,8 +44,8 @@ Widely applicable information criterion (WAIC)
 \itemize{
 \item \code{matrix}: An \eqn{S} by \eqn{N} matrix, where \eqn{S} is the size of the posterior
 sample (the number of simulations) and \eqn{N} is the number of data points.
-Typically (but not restricted to be) the object returned by
-\code{\link{extract_log_lik}}.
+For example, the object returned by
+\code{\link{extract_log_lik}} can be used.
 
 \item \code{function}: A function \eqn{f} that takes arguments \code{i}, \code{data},
  and \code{draws} and returns a vector containing the log-likelihood for
@@ -65,6 +65,7 @@ Typically (but not restricted to be) the object returned by
    \item \code{S}: The size of the posterior sample.
  }
 }}
+
 \examples{
 \dontrun{
 log_lik1 <- extract_log_lik(stanfit1)
@@ -79,4 +80,3 @@ print(compare(waic1, waic2), digits = 2)
 \code{\link{compare}}, \code{\link{print.loo}},
 \code{\link{loo-package}}
 }
-

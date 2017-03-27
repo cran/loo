@@ -2,8 +2,8 @@ Package: loo
 Type: Package
 Title: Efficient Leave-One-Out Cross-Validation and WAIC for Bayesian
         Models
-Version: 1.0.0
-Date: 2016-12-15
+Version: 1.1.0
+Date: 2016-03-27
 Authors@R: c(person("Aki", "Vehtari", email = "Aki.Vehtari@aalto.fi", role = c("aut")),
              person("Andrew", "Gelman", email = "gelman@stat.columbia.edu", role = c("aut")),
              person("Jonah", "Gabry", email = "jsg2201@columbia.edu", role = c("cre", "aut")),
@@ -23,15 +23,15 @@ License: GPL (>= 3)
 LazyData: TRUE
 Depends: R (>= 3.1.2)
 Imports: graphics, matrixStats (>= 0.50.0), parallel, stats
-Suggests: knitr, rmarkdown, testthat
+Suggests: knitr, rmarkdown, rstan, rstanarm, testthat
 VignetteBuilder: knitr
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1
 NeedsCompilation: no
-Packaged: 2016-12-15 22:35:09 UTC; jgabry
+Packaged: 2017-03-27 14:54:10 UTC; jgabry
 Author: Aki Vehtari [aut],
   Andrew Gelman [aut],
   Jonah Gabry [cre, aut],
   Juho Piironen [ctb],
   Ben Goodrich [ctb]
 Repository: CRAN
-Date/Publication: 2016-12-16 08:33:56
+Date/Publication: 2017-03-27 15:21:52 UTC

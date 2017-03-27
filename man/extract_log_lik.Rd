@@ -2,7 +2,7 @@
 % Please edit documentation in R/extract_log_lik.R
 \name{extract_log_lik}
 \alias{extract_log_lik}
-\title{Extract log-likelihood from a Stan model}
+\title{Extract pointwise log-likelihood matrix from a Stan model}
 \usage{
 extract_log_lik(stanfit, parameter_name = "log_lik")
 }
@@ -47,4 +47,3 @@ Stan Development Team (2016). The Stan C++ Library, Version 2.10.0.
 Stan Development Team (2016). RStan: the R interface to Stan, Version 2.10.1.
 \url{http://mc-stan.org/interfaces/rstan.html}
 }
-
