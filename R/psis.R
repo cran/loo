@@ -19,7 +19,10 @@
 #'   term in self-normalizing importance sampling. If \code{r_eff} is not
 #'   provided then the reported PSIS effective sample sizes and Monte Carlo
 #'   error estimates will be over-optimistic. See the \code{\link{relative_eff}}
-#'   helper function for computing \code{r_eff}.
+#'   helper function for computing \code{r_eff}. If using \code{psis} with
+#'   draws of the \code{log_ratios} not obtained from MCMC then the warning
+#'   message thrown when not specifying \code{r_eff} can be disabled by
+#'   setting \code{r_eff} to \code{NA}.
 #'
 #' @return The \code{psis} methods return an object of class \code{"psis"},
 #'   which is a named list with the following components:
@@ -71,7 +74,7 @@
 #'
 #' @examples
 #' log_ratios <- -1 * example_loglik_array()
-#' r_eff <- relative_eff(exp(log_ratios))
+#' r_eff <- relative_eff(exp(-log_ratios))
 #' psis_result <- psis(log_ratios, r_eff = r_eff)
 #' str(psis_result)
 #' plot(psis_result)
@@ -92,19 +95,14 @@ psis <- function(log_ratios, ...) UseMethod("psis")
 #' @template array
 #'
 psis.array <-
-  function(log_ratios, ..., r_eff = NULL, cores = getOption("mc.cores", 1)) {
+  function(log_ratios, ...,
+           r_eff = NULL,
+           cores = getOption("mc.cores", 1)) {
     cores <- loo_cores(cores)
-    stopifnot(
-      length(dim(log_ratios)) == 3,
-      is.null(r_eff) || length(r_eff) == dim(log_ratios)[3]
-    )
+    stopifnot(length(dim(log_ratios)) == 3)
     log_ratios <- validate_ll(log_ratios)
     log_ratios <- llarray_to_matrix(log_ratios)
-    if (is.null(r_eff)) {
-      if (!called_from_loo()) throw_psis_r_eff_warning()
-      r_eff <- rep(1, ncol(log_ratios))
-    }
-
+    r_eff <- prepare_psis_r_eff(r_eff, len = ncol(log_ratios))
     do_psis(log_ratios, r_eff = r_eff, cores = cores)
   }
 
@@ -113,14 +111,13 @@ psis.array <-
 #' @template matrix
 #'
 psis.matrix <-
-  function(log_ratios, ..., r_eff = NULL, cores = getOption("mc.cores", 1)) {
+  function(log_ratios,
+           ...,
+           r_eff = NULL,
+           cores = getOption("mc.cores", 1)) {
     cores <- loo_cores(cores)
-    stopifnot(is.null(r_eff) || length(r_eff) == ncol(log_ratios))
     log_ratios <- validate_ll(log_ratios)
-    if (is.null(r_eff)) {
-      if (!called_from_loo()) throw_psis_r_eff_warning()
-      r_eff <- rep(1, ncol(log_ratios))
-    }
+    r_eff <- prepare_psis_r_eff(r_eff, len = ncol(log_ratios))
     do_psis(log_ratios, r_eff = r_eff, cores = cores)
   }
 
@@ -130,16 +127,10 @@ psis.matrix <-
 #'
 psis.default <-
   function(log_ratios, ..., r_eff = NULL) {
-    stopifnot(is.null(dim(log_ratios)) || length(dim(log_ratios)) == 1,
-              is.null(r_eff) || length(r_eff) == 1)
+    stopifnot(is.null(dim(log_ratios)) || length(dim(log_ratios)) == 1)
     dim(log_ratios) <- c(length(log_ratios), 1)
-    if (is.null(r_eff)) {
-      if (!called_from_loo()) throw_psis_r_eff_warning()
-      r_eff <- 1
-    }
-    psis.matrix(log_ratios,
-                r_eff = r_eff,
-                cores = 1)
+    r_eff <- prepare_psis_r_eff(r_eff, len = 1)
+    psis.matrix(log_ratios, r_eff = r_eff, cores = 1)
   }
 
 #' @rdname psis
@@ -179,80 +170,15 @@ dim.psis <- function(x) {
   attr(x, "dims")
 }
 
+#' @rdname psis
+#' @export
+#' @param x For \code{is.psis}, an object to check.
+is.psis <- function(x) {
+  inherits(x, "psis") && is.list(x)
+}
+
 
 # internal ----------------------------------------------------------------
-
-# Do PSIS given matrix of log weights
-#
-# @param lr Matrix of log ratios (-loglik)
-# @param r_eff Vector of relative effective sample sizes
-# @param cores User's integer cores argument
-# @return A list with class "psis" and structure described in the main doc at
-#   the top of this file.
-#
-do_psis <- function(log_ratios, r_eff, cores) {
-  stopifnot(length(r_eff) == ncol(log_ratios),
-            cores == as.integer(cores))
-  N <- ncol(log_ratios)
-  S <- nrow(log_ratios)
-  tail_len <- n_pareto(r_eff, S)
-  throw_tail_length_warnings(tail_len)
-
-  if (cores == 1) {
-    lw_list <- lapply(seq_len(N), function(i)
-      do_psis_i(log_ratios[, i], tail_len[i]))
-  } else {
-    if (.Platform$OS.type != "windows") {
-      lw_list <- parallel::mclapply(
-        X = seq_len(N),
-        FUN = function(i)
-          do_psis_i(log_ratios[, i], tail_len[i]),
-        mc.cores = cores
-      )
-    } else {
-      cl <- parallel::makePSOCKcluster(cores)
-      on.exit(parallel::stopCluster(cl))
-      lw_list <-
-        parallel::parLapply(
-          cl = cl,
-          X = seq_len(N),
-          fun = function(i)
-            do_psis_i(log_ratios[, i], tail_len[i])
-        )
-    }
-  }
-
-  pareto_k <- psis_apply(lw_list, "pareto_k")
-  throw_pareto_warnings(pareto_k)
-
-  log_weights <- psis_apply(lw_list, "log_weights", fun_val = numeric(S))
-
-  # truncate at the max of raw wts
-  max_wts <- apply(log_ratios, 2, max)
-  log_weights <- sapply(1:N, function(n) {
-    truncate_lw(log_weights[, n], upper = max_wts[n])
-  })
-
-  psis_object(
-    unnormalized_log_weights = log_weights,
-    pareto_k = pareto_k,
-    tail_len = tail_len,
-    r_eff = r_eff
-  )
-}
-
-#' Extract named components from each list in a list of lists
-#'
-#' @noRd
-#' @param x List of lists.
-#' @param item String naming the component or attribute to pull out of each list (or list-like object).
-#' @param fun,fun.val passed to vapply's FUN and FUN.VALUE.
-#' @return Numeric vector or matrix.
-#'
-psis_apply <- function(x, item, fun = c("[[", "attr"), fun_val = numeric(1)) {
-  stopifnot(is.list(x))
-  vapply(x, FUN = match.arg(fun), FUN.VALUE = fun_val, item)
-}
 
 #' Structure the object returned by the psis methods
 #'
@@ -293,6 +219,73 @@ psis_object <-
   }
 
 
+#' Do PSIS given matrix of log weights
+#'
+#' @noRd
+#' @param lr Matrix of log ratios (-loglik)
+#' @param r_eff Vector of relative effective sample sizes
+#' @param cores User's integer cores argument
+#' @return A list with class "psis" and structure described in the main doc at
+#'   the top of this file.
+#'
+do_psis <- function(log_ratios, r_eff, cores) {
+  stopifnot(cores == as.integer(cores))
+  N <- ncol(log_ratios)
+  S <- nrow(log_ratios)
+  tail_len <- n_pareto(r_eff, S)
+  throw_tail_length_warnings(tail_len)
+
+  if (cores == 1) {
+    lw_list <- lapply(seq_len(N), function(i)
+      do_psis_i(log_ratios[, i], tail_len[i]))
+  } else {
+    if (.Platform$OS.type != "windows") {
+      lw_list <- parallel::mclapply(
+        X = seq_len(N),
+        FUN = function(i)
+          do_psis_i(log_ratios[, i], tail_len[i]),
+        mc.cores = cores
+      )
+    } else {
+      cl <- parallel::makePSOCKcluster(cores)
+      on.exit(parallel::stopCluster(cl))
+      lw_list <-
+        parallel::parLapply(
+          cl = cl,
+          X = seq_len(N),
+          fun = function(i)
+            do_psis_i(log_ratios[, i], tail_len[i])
+        )
+    }
+  }
+
+  log_weights <- psis_apply(lw_list, "log_weights", fun_val = numeric(S))
+  pareto_k <- psis_apply(lw_list, "pareto_k")
+  throw_pareto_warnings(pareto_k)
+
+  psis_object(
+    unnormalized_log_weights = log_weights,
+    pareto_k = pareto_k,
+    tail_len = tail_len,
+    r_eff = r_eff
+  )
+}
+
+#' Extract named components from each list in the list of lists obtained by
+#' parallelizing do_psis_i()
+#'
+#' @noRd
+#' @param x List of lists.
+#' @param item String naming the component or attribute to pull out of each list
+#'   (or list-like object).
+#' @param fun,fun.val passed to vapply's FUN and FUN.VALUE.
+#' @return Numeric vector or matrix.
+#'
+psis_apply <- function(x, item, fun = c("[[", "attr"), fun_val = numeric(1)) {
+  stopifnot(is.list(x))
+  vapply(x, FUN = match.arg(fun), FUN.VALUE = fun_val, item)
+}
+
 #' PSIS (without truncation and normalization) on a single vector
 #'
 #' @noRd
@@ -323,6 +316,10 @@ do_psis_i <- function(log_ratios_i, tail_len_i) {
       lw_i[ord$ix[tail_ids]] <- smoothed$tail
     }
   }
+
+  # truncate at max of raw wts (i.e., 0 since max has been subtracted)
+  lw_i <- truncate_lw(lw_i, upper = 0)
+
   list(log_weights = lw_i, pareto_k = khat)
 }
 
@@ -444,22 +441,52 @@ throw_tail_length_warnings <- function(tail_lengths) {
   invisible(tail_lengths)
 }
 
-
-#' Warning message if r_eff not specified
-#' @noRd
+#' Prepare r_eff to pass to psis and throw warnings/errors if necessary
 #'
-throw_psis_r_eff_warning <- function() {
-  warning("Relative effective sample sizes ('r_eff' argument) not specified. ",
-          "PSIS n_eff will not adjusted based on MCMC n_eff.", call. = FALSE)
+#' @noRd
+#' @param r_eff User's r_eff argument.
+#' @param len The length r_eff should have if not NULL or NA.
+#' @return If \code{r_eff} has length \code{len} then \code{r_eff} is returned.
+#'   If \code{r_eff} is NULL then a warning is thrown and \code{rep(1, len)} is
+#'   returned. If \code{r_eff} is NA then the warning is skipped and
+#'   \code{rep(1, len)} is returned. If \code{r_eff} has length \code{len}
+#'   but some of the values are \code{NA} then an error is thrown.
+#'
+prepare_psis_r_eff <- function(r_eff, len) {
+  if (isTRUE(is.null(r_eff) || all(is.na(r_eff)))) {
+    if (!called_from_loo() && is.null(r_eff)) {
+      throw_psis_r_eff_warning()
+    }
+    r_eff <- rep(1, len)
+  } else if (length(r_eff) != len) {
+    stop("'r_eff' must have one value per observation.", call. = FALSE)
+  } else if (anyNA(r_eff)) {
+    stop("Can't mix NA and not NA values in 'r_eff'.", call. = FALSE)
+  }
+  return(r_eff)
 }
 
-#' check if psis was called from one of the loo methods
+#' Check if psis was called from one of the loo methods
+#'
 #' @noRd
+#' @return TRUE if the loo array, matrix, or function method is found in the
+#'   active call list, FALSE otherwise.
+#'
 called_from_loo <- function() {
   calls <- sys.calls()
   txt <- unlist(lapply(calls, deparse))
   patts <- "loo.array\\(|loo.matrix\\(|loo.function\\("
   check <- sapply(txt, function(x) grepl(patts, x))
   isTRUE(any(check))
+}
+
+#' Warning message about missing r_eff argument
+#' @noRd
+throw_psis_r_eff_warning <- function() {
+  warning(
+    "Relative effective sample sizes ('r_eff' argument) not specified. ",
+    "PSIS n_eff will not adjusted based on MCMC n_eff.",
+    call. = FALSE
+  )
 }
 

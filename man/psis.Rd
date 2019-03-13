@@ -6,6 +6,7 @@
 \alias{psis.matrix}
 \alias{psis.default}
 \alias{weights.psis}
+\alias{is.psis}
 \title{Pareto smoothed importance sampling (PSIS)}
 \usage{
 psis(log_ratios, ...)
@@ -19,6 +20,8 @@ psis(log_ratios, ...)
 \method{psis}{default}(log_ratios, ..., r_eff = NULL)
 
 \method{weights}{psis}(object, ..., log = TRUE, normalize = TRUE)
+
+is.psis(x)
 }
 \arguments{
 \item{log_ratios}{An array, matrix, or vector of importance ratios on the log
@@ -35,7 +38,10 @@ This is related to the relative efficiency of estimating the normalizing
 term in self-normalizing importance sampling. If \code{r_eff} is not
 provided then the reported PSIS effective sample sizes and Monte Carlo
 error estimates will be over-optimistic. See the \code{\link{relative_eff}}
-helper function for computing \code{r_eff}.}
+helper function for computing \code{r_eff}. If using \code{psis} with
+draws of the \code{log_ratios} not obtained from MCMC then the warning
+message thrown when not specifying \code{r_eff} can be disabled by
+setting \code{r_eff} to \code{NA}.}
 
 \item{cores}{The number of cores to use for parallelization. This defaults to
 the option \code{mc.cores} which can be set for an entire R session by
@@ -43,7 +49,10 @@ the option \code{mc.cores} which can be set for an entire R session by
 deprecated but will be given precedence over \code{mc.cores} until
 \code{loo.cores} is removed in a future release. \strong{As of version
 2.0.0 the default is now 1 core if \code{mc.cores} is not set, but we
-recommend using as many (or close to as many) cores as possible.}}
+recommend using as many (or close to as many) cores as possible.}
+Note for Windows 10 users: it is recommended to avoid using the
+\code{.Rprofile} file to set \code{mc.cores} (using the \code{cores}
+argument or setting \code{mc.cores} interactively or in a script is fine).}
 
 \item{object}{For the \code{weights} method, an object
 returned by \code{psis} (a list with class \code{"psis"}).}
@@ -53,6 +62,8 @@ the log scale? Defaults to \code{TRUE}.}
 
 \item{normalize}{For the \code{weights} method, should the weights be
 normalized? Defaults to \code{TRUE}.}
+
+\item{x}{For \code{is.psis}, an object to check.}
 }
 \value{
 The \code{psis} methods return an object of class \code{"psis"},
@@ -121,7 +132,7 @@ of data points.
 
 \examples{
 log_ratios <- -1 * example_loglik_array()
-r_eff <- relative_eff(exp(log_ratios))
+r_eff <- relative_eff(exp(-log_ratios))
 psis_result <- psis(log_ratios, r_eff = r_eff)
 str(psis_result)
 plot(psis_result)
@@ -141,11 +152,11 @@ Vehtari, A., Gelman, A., and Gabry, J. (2017a). Practical
   Bayesian model evaluation using leave-one-out cross-validation and WAIC.
   \emph{Statistics and Computing}. 27(5), 1413--1432.
   doi:10.1007/s11222-016-9696-4.
-  (\href{http://link.springer.com/article/10.1007\%2Fs11222-016-9696-4}{published
-  version}, \href{http://arxiv.org/abs/1507.04544}{arXiv preprint}).
+  (\href{http://link.springer.com/article/10.1007\%2Fs11222-016-9696-4}{
+  journal}, \href{http://arxiv.org/abs/1507.04544}{preprint arXiv:1507.04544}).
 
 Vehtari, A., Gelman, A., and Gabry, J. (2017b). Pareto smoothed
-  importance sampling. arXiv preprint: \url{http://arxiv.org/abs/1507.02646/}
+importance sampling. arXiv preprint: \url{http://arxiv.org/abs/1507.02646/}
 }
 \seealso{
 \itemize{
