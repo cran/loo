@@ -1,7 +1,7 @@
 params <-
 list(EVAL = TRUE)
 
-## ---- SETTINGS-knitr, include=FALSE--------------------------------------
+## ---- SETTINGS-knitr, include=FALSE-------------------------------------------
 stopifnot(require(knitr))
 opts_chunk$set(
   comment=NA,
@@ -14,14 +14,14 @@ opts_chunk$set(
   fig.align = "center"
 )
 
-## ----more-knitr-ops, include=FALSE---------------------------------------
+## ----more-knitr-ops, include=FALSE--------------------------------------------
 knitr::opts_chunk$set(
   cache=TRUE,
   message=FALSE, 
   warning=FALSE
 )
 
-## ----lpdf, eval=FALSE----------------------------------------------------
+## ----lpdf, eval=FALSE---------------------------------------------------------
 #  /**
 #   * Normal log-pdf for spatially lagged responses
 #   *
@@ -48,7 +48,7 @@ knitr::opts_chunk$set(
 #           0.5 * dot_self(half_pred) * inv_sigma2;
 #  }
 
-## ----setup, cache=FALSE--------------------------------------------------
+## ----setup, cache=FALSE-------------------------------------------------------
 library("loo")
 library("brms")
 library("bayesplot")
@@ -63,26 +63,26 @@ set.seed(SEED) # only sets seed for R (seed for Stan set later)
 # loads COL.OLD data frame and COL.nb neighbor list
 data(oldcol, package = "spdep") 
 
-## ----data----------------------------------------------------------------
+## ----data---------------------------------------------------------------------
 str(COL.OLD[, c("CRIME", "HOVAL", "INC")])
 
-## ----fit, results="hide"-------------------------------------------------
+## ----fit, results="hide"------------------------------------------------------
 fit <- brm(
-  CRIME ~ INC + HOVAL, 
+  CRIME ~ INC + HOVAL + sar(COL.nb, type = "lag"), 
   data = COL.OLD,
-  autocor = cor_lagsar(COL.nb),
+  data2 = list(COL.nb = COL.nb),
   chains = 4,
   seed = SEED
 )
 
-## ----plot-lagsar, message=FALSE------------------------------------------
+## ----plot-lagsar, message=FALSE-----------------------------------------------
 lagsar <- as.matrix(fit, pars = "lagsar")
 estimates <- quantile(lagsar, probs = c(0.25, 0.5, 0.75))
 mcmc_hist(lagsar) + 
   vline_at(estimates, linetype = 2, size = 1) +
   ggtitle("lagsar: posterior median and 50% central interval")
 
-## ----approx--------------------------------------------------------------
+## ----approx-------------------------------------------------------------------
 posterior <- as.data.frame(fit)
 y <- fit$data$CRIME
 N <- length(y)
@@ -92,7 +92,7 @@ loglik <- yloo <- sdloo <- matrix(nrow = S, ncol = N)
 for (s in 1:S) {
   p <- posterior[s, ]
   eta <- p$b_Intercept + p$b_INC * fit$data$INC + p$b_HOVAL * fit$data$HOVAL
-  W_tilde <- diag(N) - p$lagsar * fit$autocor$W
+  W_tilde <- diag(N) - p$lagsar * spdep::nb2mat(COL.nb)
   Cinv <- t(W_tilde) %*% W_tilde / p$sigma^2
   g <- Cinv %*% (y - solve(W_tilde, eta))
   cbar <- diag(Cinv)
@@ -105,10 +105,10 @@ for (s in 1:S) {
 log_ratios <- -loglik
 psis_result <- psis(log_ratios)
 
-## ----plot, cache = FALSE-------------------------------------------------
+## ----plot, cache = FALSE------------------------------------------------------
 plot(psis_result, label_points = TRUE)
 
-## ----checklast, cache = FALSE--------------------------------------------
+## ----checklast, cache = FALSE-------------------------------------------------
 yloo_sub <- yloo[S, ]
 sdloo_sub <- sdloo[S, ]
 df <- data.frame(
@@ -126,15 +126,15 @@ ggplot(data=df, aes(x = y, y = yloo, ymin = ymin, ymax = ymax)) +
   geom_abline(color = "gray30", size = 1.2) +
   geom_point()
 
-## ----psisloo-------------------------------------------------------------
+## ----psisloo------------------------------------------------------------------
 (psis_loo <- loo(loglik))
 
-## ----fit_dummy, cache = TRUE---------------------------------------------
+## ----fit_dummy, cache = TRUE--------------------------------------------------
 # see help("mi", "brms") for details on the mi() usage
 fit_dummy <- brm(
-  CRIME | mi() ~ INC + HOVAL, 
+  CRIME | mi() ~ INC + HOVAL + sar(COL.nb, type = "lag"), 
   data = COL.OLD,
-  autocor = cor_lagsar(COL.nb), 
+  data2 = list(COL.nb = COL.nb),
   chains = 0
 )
 
@@ -155,7 +155,7 @@ for (i in seq_len(N)) {
     y_miss_i <- y
     y_miss_i[i] <- p$Ymi
     eta <- p$b_Intercept + p$b_INC * fit_i$data$INC + p$b_HOVAL * fit_i$data$HOVAL
-    W_tilde <- diag(N) - p$lagsar * fit_i$autocor$W
+    W_tilde <- diag(N) - p$lagsar * spdep::nb2mat(COL.nb)
     Cinv <- t(W_tilde) %*% W_tilde / p$sigma^2
     g <- Cinv %*% (y_miss_i - solve(W_tilde, eta))
     cbar <- diag(Cinv);
@@ -170,13 +170,13 @@ for (i in seq_len(N)) {
 }
 res <- do.call(rbind, res)
 
-## ----yplots, cache = FALSE, fig.width=10, out.width="95%", fig.asp = 0.3----
+## ----yplots, cache = FALSE, fig.width=10, out.width="95%", fig.asp = 0.3------
 res_sub <- res[res$obs %in% 1:4, ]
 ggplot(res_sub, aes(y, fill = type)) +
   geom_density(alpha = 0.6) +
   facet_wrap("obs", scales = "fixed", ncol = 4)
 
-## ----loo_exact, cache=FALSE----------------------------------------------
+## ----loo_exact, cache=FALSE---------------------------------------------------
 log_mean_exp <- function(x) {
   # more stable than log(mean(exp(x)))
   max_x <- max(x)
@@ -186,7 +186,7 @@ exact_elpds <- apply(loglik, 2, log_mean_exp)
 exact_elpd <- sum(exact_elpds)
 round(exact_elpd, 1)
 
-## ----compare, fig.height=5-----------------------------------------------
+## ----compare, fig.height=5----------------------------------------------------
 df <- data.frame(
   approx_elpd = psis_loo$pointwise[, "elpd_loo"],
   exact_elpd = exact_elpds
@@ -199,14 +199,14 @@ ggplot(df, aes(x = approx_elpd, y = exact_elpd)) +
   ylab("Exact elpds") +
   coord_fixed(xlim = c(-16, -3), ylim = c(-16, -3))
 
-## ----pt4-----------------------------------------------------------------
+## ----pt4----------------------------------------------------------------------
 without_pt_4 <- c(
   approx = sum(psis_loo$pointwise[-4, "elpd_loo"]),
   exact = sum(exact_elpds[-4])  
 )
 round(without_pt_4, 1)
 
-## ----brms-stan-code, eval=FALSE------------------------------------------
+## ----brms-stan-code, eval=FALSE-----------------------------------------------
 #  // generated with brms 2.2.0
 #  functions {
 #  /**
