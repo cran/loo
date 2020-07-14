@@ -12,10 +12,26 @@
 
 <meta name="author" content="Mans Magnusson, Paul Bürkner, Aki Vehtari and Jonah Gabry" />
 
-<meta name="date" content="2020-07-06" />
+<meta name="date" content="2020-07-14" />
 
 <title>Using Leave-one-out cross-validation for large data</title>
 
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
 
 
 <style type="text/css">code{white-space: pre;}</style>
@@ -303,7 +319,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">Using Leave-one-out cross-validation for large data</h1>
 <h4 class="author">Mans Magnusson, Paul Bürkner, Aki Vehtari and Jonah Gabry</h4>
-<h4 class="date">2020-07-06</h4>
+<h4 class="date">2020-07-14</h4>
 
 
 <div id="TOC">
@@ -329,6 +345,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 %\VignetteEngine{knitr::rmarkdown}
 %\VignetteIndexEntry{Using Leave-one-out cross-validation for large data}
 -->
+<p><strong>NOTE: We recommend viewing the fully rendered version of this vignette online at <a href="https://mc-stan.org/loo/articles/" class="uri">https://mc-stan.org/loo/articles/</a></strong></p>
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
 <p>This vignette demonstrates how to do leave-one-out cross-validation for large data using the <strong>loo</strong> package and Stan. There are two approaches covered: LOO with subsampling and LOO using approximations to posterior distributions. Some sections from this vignette are excerpted from the papers</p>

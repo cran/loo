@@ -1,5 +1,5 @@
 params <-
-list(EVAL = TRUE)
+list(EVAL = FALSE)
 
 ## ----llfun_logistic-----------------------------------------------------------
 llfun_logistic <- function(data_i, draws) {

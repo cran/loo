@@ -2,8 +2,8 @@ Package: loo
 Type: Package
 Title: Efficient Leave-One-Out Cross-Validation and WAIC for Bayesian
         Models
-Version: 2.3.0
-Date: 2020-07-06
+Version: 2.3.1
+Date: 2020-07-14
 Authors@R: c(person("Aki", "Vehtari", email = "Aki.Vehtari@aalto.fi", role = c("aut")),
              person("Jonah", "Gabry", email = "jsg2201@columbia.edu", role = c("cre", "aut")),
              person("Mans", "Magnusson", role = c("aut")),
@@ -39,7 +39,7 @@ Encoding: UTF-8
 SystemRequirements: pandoc (>= 1.12.3), pandoc-citeproc
 RoxygenNote: 7.1.1
 NeedsCompilation: no
-Packaged: 2020-07-07 04:21:42 UTC; jgabry
+Packaged: 2020-07-14 17:24:25 UTC; jgabry
 Author: Aki Vehtari [aut],
   Jonah Gabry [cre, aut],
   Mans Magnusson [aut],
@@ -50,4 +50,4 @@ Author: Aki Vehtari [aut],
   Ben Goodrich [ctb],
   Juho Piironen [ctb]
 Repository: CRAN
-Date/Publication: 2020-07-07 12:50:06 UTC
+Date/Publication: 2020-07-14 22:50:10 UTC
