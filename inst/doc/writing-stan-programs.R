@@ -1,5 +1,5 @@
 params <-
-list(EVAL = FALSE)
+list(EVAL = TRUE)
 
 ## ---- eval=FALSE--------------------------------------------------------------
 #  library("rstan")

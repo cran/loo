@@ -109,14 +109,6 @@
 #' loo(LLmat, r_eff = rel_n_eff, cores = 2)
 #'
 #'
-#' \dontrun{
-#' ### Usage with stanfit objects
-#' # see ?extract_log_lik
-#' log_lik1 <- extract_log_lik(stanfit1, merge_chains = FALSE)
-#' rel_n_eff <- relative_eff(exp(log_lik1))
-#' loo(log_lik1, r_eff = rel_n_eff, cores = 2)
-#' }
-#'
 #' ### Using log-likelihood function instead of array or matrix
 #' set.seed(124)
 #'
@@ -162,11 +154,10 @@
 #' ### For package developers: defining loo methods
 #'
 #' # An example of a possible loo method for 'stanfit' objects (rstan package).
-#' # A similar method is planned for a future release of rstan (or is already
-#' # released, depending on when you are reading this). In order for users
-#' # to be able to call loo(stanfit) instead of loo.stanfit(stanfit) the
-#' # NAMESPACE needs to be handled appropriately (roxygen2 and devtools packages
-#' # are good for that).
+#' # A similar method is included in the rstan package.
+#' # In order for users to be able to call loo(stanfit) instead of
+#' # loo.stanfit(stanfit) the NAMESPACE needs to be handled appropriately
+#' # (roxygen2 and devtools packages are good for that).
 #' #
 #' loo.stanfit <-
 #'  function(x,

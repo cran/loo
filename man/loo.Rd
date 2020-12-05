@@ -241,14 +241,6 @@ rel_n_eff <- relative_eff(exp(LLmat), chain_id = rep(1:2, each = 500))
 loo(LLmat, r_eff = rel_n_eff, cores = 2)
 
 
-\dontrun{
-### Usage with stanfit objects
-# see ?extract_log_lik
-log_lik1 <- extract_log_lik(stanfit1, merge_chains = FALSE)
-rel_n_eff <- relative_eff(exp(log_lik1))
-loo(log_lik1, r_eff = rel_n_eff, cores = 2)
-}
-
 ### Using log-likelihood function instead of array or matrix
 set.seed(124)
 
@@ -294,11 +286,10 @@ all.equal(loo_with_mat$estimates, loo_with_fn$estimates) # should be TRUE!
 ### For package developers: defining loo methods
 
 # An example of a possible loo method for 'stanfit' objects (rstan package).
-# A similar method is planned for a future release of rstan (or is already
-# released, depending on when you are reading this). In order for users
-# to be able to call loo(stanfit) instead of loo.stanfit(stanfit) the
-# NAMESPACE needs to be handled appropriately (roxygen2 and devtools packages
-# are good for that).
+# A similar method is included in the rstan package.
+# In order for users to be able to call loo(stanfit) instead of
+# loo.stanfit(stanfit) the NAMESPACE needs to be handled appropriately
+# (roxygen2 and devtools packages are good for that).
 #
 loo.stanfit <-
  function(x,
@@ -324,12 +315,12 @@ loo.stanfit <-
 Vehtari, A., Gelman, A., and Gabry, J. (2017a). Practical Bayesian model
 evaluation using leave-one-out cross-validation and WAIC.
 \emph{Statistics and Computing}. 27(5), 1413--1432. doi:10.1007/s11222-016-9696-4
-(\href{http://link.springer.com/article/10.1007\%2Fs11222-016-9696-4}{journal version},
+(\href{https://link.springer.com/article/10.1007/s11222-016-9696-4}{journal version},
 \href{https://arxiv.org/abs/1507.04544}{preprint arXiv:1507.04544}).
 
 Vehtari, A., Simpson, D., Gelman, A., Yao, Y., and Gabry, J. (2019).
 Pareto smoothed importance sampling.
-\href{https://arxiv.org/abs/1507.02646/}{preprint arXiv:1507.02646}
+\href{https://arxiv.org/abs/1507.02646}{preprint arXiv:1507.02646}
 }
 \seealso{
 \itemize{
