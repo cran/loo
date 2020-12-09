@@ -1,6 +1,19 @@
 params <-
 list(EVAL = TRUE)
 
+## ----SETTINGS-knitr, include=FALSE--------------------------------------------
+stopifnot(require(knitr))
+opts_chunk$set(
+  comment=NA,
+  eval = if (isTRUE(exists("params"))) params$EVAL else FALSE,
+  dev = "png",
+  dpi = 150,
+  fig.asp = 0.618,
+  fig.width = 5,
+  out.width = "60%",
+  fig.align = "center"
+)
+
 ## ---- eval=FALSE--------------------------------------------------------------
 #  library("rstan")
 #  
