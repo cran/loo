@@ -31,7 +31,9 @@ descriptions of how to specify the inputs.}
 
 \item{data, draws, ...}{For \code{loo_subsample.function()}, these are the data,
 posterior draws, and other arguments to pass to the log-likelihood
-function.}
+function. Note that for some \code{loo_approximation}s, the draws will be replaced
+by the posteriors summary statistics to compute loo approximations. See
+argument \code{loo_approximation} for details.}
 
 \item{observations}{The subsample observations to use. The argument can take
 four (4) types of arguments:
@@ -58,8 +60,9 @@ self-normalizing importance sampling when using posterior draws obtained
 with MCMC. If MCMC draws are used and \code{r_eff} is not provided then
 the reported PSIS effective sample sizes and Monte Carlo error estimates
 will be over-optimistic. If the posterior draws are independent then
-\code{r_eff=1} and can be omitted. See the \code{\link[=relative_eff]{relative_eff()}}
-helper functions for computing \code{r_eff}.}
+\code{r_eff=1} and can be omitted. The warning message thrown when \code{r_eff} is
+not specified can be disabled by setting \code{r_eff} to \code{NA}. See the
+\code{\link[=relative_eff]{relative_eff()}} helper functions for computing \code{r_eff}.}
 
 \item{save_psis}{Should the \code{"psis"} object created internally by
 \code{loo_subsample()} be saved in the returned object? See \code{\link[=loo]{loo()}} for details.}
@@ -179,8 +182,9 @@ Magnusson, M., Riis Andersen, M., Jonasson, J. and Vehtari, A. (2019).
 Leave-One-Out Cross-Validation for Large Data.
 In \emph{International Conference on Machine Learning}
 
-Magnusson, M., Riis Andersen, M., Jonasson, J. and Vehtari, A. (2019).
+Magnusson, M., Riis Andersen, M., Jonasson, J. and Vehtari, A. (2020).
 Leave-One-Out Cross-Validation for Model Comparison in Large Data.
+In \emph{International Conference on Artificial Intelligence and Statistics (AISTATS)}
 }
 \seealso{
 \code{\link[=loo]{loo()}}, \code{\link[=psis]{psis()}}, \code{\link[=loo_compare]{loo_compare()}}
