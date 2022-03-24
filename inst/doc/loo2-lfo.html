@@ -12,7 +12,7 @@
 
 <meta name="author" content="Paul Bürkner, Jonah Gabry, Aki Vehtari" />
 
-<meta name="date" content="2022-03-15" />
+<meta name="date" content="2022-03-23" />
 
 <title>Approximate leave-future-out cross-validation for Bayesian time series models</title>
 
@@ -141,7 +141,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <h1 class="title toc-ignore">Approximate leave-future-out cross-validation for Bayesian time series models</h1>
 <h4 class="author">Paul Bürkner, Jonah Gabry, Aki Vehtari</h4>
-<h4 class="date">2022-03-15</h4>
+<h4 class="date">2022-03-23</h4>
 
 
 <div id="TOC">
@@ -577,47 +577,47 @@ attached base packages:
 
 other attached packages:
 [1] ggplot2_3.3.5        brms_2.16.3          bayesplot_1.8.1.9000
-[4] rstanarm_2.21.2      Rcpp_1.0.7           loo_2.5.0           
+[4] rstanarm_2.21.2      Rcpp_1.0.7           loo_2.5.1           
 [7] rstan_2.26.6         StanHeaders_2.26.6   knitr_1.33          
 
 loaded via a namespace (and not attached):
-  [1] minqa_1.2.4          colorspace_2.0-2     ellipsis_0.3.2      
-  [4] ggridges_0.5.3       estimability_1.3     markdown_1.1        
-  [7] base64enc_0.1-3      rstudioapi_0.13      farver_2.1.0        
- [10] DT_0.18              fansi_0.5.0          mvtnorm_1.1-2       
- [13] bridgesampling_1.1-2 codetools_0.2-18     splines_4.1.1       
- [16] shinythemes_1.2.0    projpred_2.0.2       jsonlite_1.7.2      
- [19] nloptr_1.2.2.2       shiny_1.7.1          compiler_4.1.1      
- [22] emmeans_1.7.2        backports_1.2.1      assertthat_0.2.1    
- [25] Matrix_1.3-4         fastmap_1.1.0        cli_3.0.1           
- [28] later_1.2.0          htmltools_0.5.2      prettyunits_1.1.1   
- [31] tools_4.1.1          igraph_1.2.6         coda_0.19-4         
- [34] gtable_0.3.0         glue_1.4.2           reshape2_1.4.4      
- [37] dplyr_1.0.7          posterior_1.1.0      V8_4.1.0            
- [40] jquerylib_0.1.4      vctrs_0.3.8          nlme_3.1-152        
- [43] crosstalk_1.1.1      tensorA_0.36.2       xfun_0.24           
- [46] stringr_1.4.0        ps_1.6.0             lme4_1.1-27         
- [49] mime_0.10            miniUI_0.1.1.1       lifecycle_1.0.0     
- [52] gtools_3.9.2         MASS_7.3-54          zoo_1.8-9           
- [55] scales_1.1.1         colourpicker_1.1.0   promises_1.2.0.1    
- [58] Brobdingnag_1.2-6    parallel_4.1.1       inline_0.3.19       
- [61] shinystan_2.6.0      gamm4_0.2-6          yaml_2.2.1          
- [64] curl_4.3.2           gridExtra_2.3        sass_0.4.0          
- [67] stringi_1.6.2        highr_0.9            dygraphs_1.1.1.6    
- [70] checkmate_2.0.0      boot_1.3-28          pkgbuild_1.2.0      
- [73] rlang_0.4.11         pkgconfig_2.0.3      matrixStats_0.60.1  
- [76] distributional_0.2.2 evaluate_0.14        lattice_0.20-44     
- [79] purrr_0.3.4          rstantools_2.2.0     htmlwidgets_1.5.3   
- [82] labeling_0.4.2       processx_3.5.2       tidyselect_1.1.1    
- [85] plyr_1.8.6           magrittr_2.0.1       R6_2.5.1            
- [88] generics_0.1.0       DBI_1.1.1            withr_2.4.2         
- [91] mgcv_1.8-36          pillar_1.6.2         xts_0.12.1          
- [94] survival_3.2-11      abind_1.4-5          tibble_3.1.4        
- [97] crayon_1.4.1         utf8_1.2.2           rmarkdown_2.9       
-[100] grid_4.1.1           callr_3.7.0          threejs_0.3.3       
-[103] digest_0.6.27        xtable_1.8-4         httpuv_1.6.1        
-[106] RcppParallel_5.1.4   stats4_4.1.1         munsell_0.5.0       
-[109] bslib_0.3.1          shinyjs_2.0.0       </code></pre>
+  [1] minqa_1.2.4           colorspace_2.0-3      ellipsis_0.3.2       
+  [4] ggridges_0.5.3        estimability_1.3      markdown_1.1         
+  [7] base64enc_0.1-3       rstudioapi_0.13       farver_2.1.0         
+ [10] DT_0.18               fansi_1.0.2           mvtnorm_1.1-2        
+ [13] bridgesampling_1.1-2  codetools_0.2-18      splines_4.1.1        
+ [16] shinythemes_1.2.0     projpred_2.0.2        jsonlite_1.8.0       
+ [19] nloptr_1.2.2.2        shiny_1.7.1           compiler_4.1.1       
+ [22] emmeans_1.7.2         backports_1.4.1       assertthat_0.2.1     
+ [25] Matrix_1.3-4          fastmap_1.1.0         cli_3.2.0            
+ [28] later_1.2.0           htmltools_0.5.2       prettyunits_1.1.1    
+ [31] tools_4.1.1           igraph_1.2.6          coda_0.19-4          
+ [34] gtable_0.3.0          glue_1.6.2            reshape2_1.4.4       
+ [37] dplyr_1.0.7           posterior_1.2.1       V8_4.1.0             
+ [40] jquerylib_0.1.4       vctrs_0.3.8           nlme_3.1-152         
+ [43] crosstalk_1.1.1       tensorA_0.36.2        xfun_0.24            
+ [46] stringr_1.4.0         ps_1.6.0              lme4_1.1-27          
+ [49] mime_0.10             miniUI_0.1.1.1        lifecycle_1.0.1      
+ [52] gtools_3.9.2          MASS_7.3-54           zoo_1.8-9            
+ [55] scales_1.1.1          colourpicker_1.1.0    promises_1.2.0.1     
+ [58] Brobdingnag_1.2-6     parallel_4.1.1        inline_0.3.19        
+ [61] shinystan_2.6.0       gamm4_0.2-6           yaml_2.2.1           
+ [64] curl_4.3.2            gridExtra_2.3         sass_0.4.0           
+ [67] stringi_1.6.2         highr_0.9             dygraphs_1.1.1.6     
+ [70] checkmate_2.0.0       boot_1.3-28           pkgbuild_1.2.0       
+ [73] rlang_1.0.2           pkgconfig_2.0.3       matrixStats_0.61.0   
+ [76] distributional_0.3.0  evaluate_0.14         lattice_0.20-44      
+ [79] purrr_0.3.4           rstantools_2.1.1.9000 htmlwidgets_1.5.3    
+ [82] labeling_0.4.2        processx_3.5.2        tidyselect_1.1.1     
+ [85] plyr_1.8.6            magrittr_2.0.2        R6_2.5.1             
+ [88] generics_0.1.2        DBI_1.1.1             withr_2.5.0          
+ [91] mgcv_1.8-36           pillar_1.7.0          xts_0.12.1           
+ [94] survival_3.2-11       abind_1.4-5           tibble_3.1.6         
+ [97] crayon_1.5.0          utf8_1.2.2            rmarkdown_2.9        
+[100] grid_4.1.1            callr_3.7.0           threejs_0.3.3        
+[103] digest_0.6.29         xtable_1.8-4          httpuv_1.6.1         
+[106] RcppParallel_5.1.4    stats4_4.1.1          munsell_0.5.0        
+[109] bslib_0.3.1           shinyjs_2.0.0        </code></pre>
 </div>
 <div id="appendix-licenses" class="section level3">
 <h3>Appendix: Licenses</h3>
