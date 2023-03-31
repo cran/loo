@@ -12,29 +12,42 @@
 
 <meta name="author" content="Topi Paananen, Paul Bürkner, Aki Vehtari and Jonah Gabry" />
 
-<meta name="date" content="2022-03-23" />
+<meta name="date" content="2023-03-30" />
 
 <title>Avoiding model refits in leave-one-out cross-validation with moment matching</title>
 
-<script src="data:application/javascript;base64,Ly8gUGFuZG9jIDIuOSBhZGRzIGF0dHJpYnV0ZXMgb24gYm90aCBoZWFkZXIgYW5kIGRpdi4gV2UgcmVtb3ZlIHRoZSBmb3JtZXIgKHRvCi8vIGJlIGNvbXBhdGlibGUgd2l0aCB0aGUgYmVoYXZpb3Igb2YgUGFuZG9jIDwgMi44KS4KZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignRE9NQ29udGVudExvYWRlZCcsIGZ1bmN0aW9uKGUpIHsKICB2YXIgaHMgPSBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCJkaXYuc2VjdGlvbltjbGFzcyo9J2xldmVsJ10gPiA6Zmlyc3QtY2hpbGQiKTsKICB2YXIgaSwgaCwgYTsKICBmb3IgKGkgPSAwOyBpIDwgaHMubGVuZ3RoOyBpKyspIHsKICAgIGggPSBoc1tpXTsKICAgIGlmICghL15oWzEtNl0kL2kudGVzdChoLnRhZ05hbWUpKSBjb250aW51ZTsgIC8vIGl0IHNob3VsZCBiZSBhIGhlYWRlciBoMS1oNgogICAgYSA9IGguYXR0cmlidXRlczsKICAgIHdoaWxlIChhLmxlbmd0aCA+IDApIGgucmVtb3ZlQXR0cmlidXRlKGFbMF0ubmFtZSk7CiAgfQp9KTsK"></script>
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
 
 <style type="text/css">
-  code{white-space: pre-wrap;}
-  span.smallcaps{font-variant: small-caps;}
-  span.underline{text-decoration: underline;}
-  div.column{display: inline-block; vertical-align: top; width: 50%;}
-  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-  ul.task-list{list-style: none;}
-    </style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
 
 
 <style type="text/css">
-  code {
-    white-space: pre;
-  }
-  .sourceCode {
-    overflow: visible;
-  }
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
 </style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
@@ -52,55 +65,54 @@ pre > code.sourceCode { white-space: pre-wrap; }
 pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
-  { counter-reset: source-line 0; }
+{ counter-reset: source-line 0; }
 pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
+{ position: relative; left: -4em; counter-increment: source-line; }
 pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-    color: #aaaaaa;
-  }
-pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
 div.sourceCode
-  {   }
+{ }
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-code span.al { color: #ff0000; font-weight: bold; } /* Alert */
-code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
-code span.at { color: #7d9029; } /* Attribute */
-code span.bn { color: #40a070; } /* BaseN */
-code span.bu { } /* BuiltIn */
-code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
-code span.ch { color: #4070a0; } /* Char */
-code span.cn { color: #880000; } /* Constant */
-code span.co { color: #60a0b0; font-style: italic; } /* Comment */
-code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
-code span.do { color: #ba2121; font-style: italic; } /* Documentation */
-code span.dt { color: #902000; } /* DataType */
-code span.dv { color: #40a070; } /* DecVal */
-code span.er { color: #ff0000; font-weight: bold; } /* Error */
-code span.ex { } /* Extension */
-code span.fl { color: #40a070; } /* Float */
-code span.fu { color: #06287e; } /* Function */
-code span.im { } /* Import */
-code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
-code span.kw { color: #007020; font-weight: bold; } /* Keyword */
-code span.op { color: #666666; } /* Operator */
-code span.ot { color: #007020; } /* Other */
-code span.pp { color: #bc7a00; } /* Preprocessor */
-code span.sc { color: #4070a0; } /* SpecialChar */
-code span.ss { color: #bb6688; } /* SpecialString */
-code span.st { color: #4070a0; } /* String */
-code span.va { color: #19177c; } /* Variable */
-code span.vs { color: #4070a0; } /* VerbatimString */
-code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
-
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
 </style>
 <script>
 // apply pandoc div.sourceCode style to pre.sourceCode instead
@@ -109,13 +121,20 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   for (var i = 0; i < sheets.length; i++) {
     if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
     try { var rules = sheets[i].cssRules; } catch (e) { continue; }
-    for (var j = 0; j < rules.length; j++) {
+    var j = 0;
+    while (j < rules.length) {
       var rule = rules[j];
       // check if there is a div.sourceCode rule
-      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
       var style = rule.style.cssText;
       // check if color or background-color is set
-      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
       // replace div.sourceCode by a pre.sourceCode rule
       sheets[i].deleteRule(j);
       sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
@@ -127,7 +146,187 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 
-<link rel="stylesheet" href="data:text/css,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" type="text/css" />
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
 
 
 
@@ -139,23 +338,29 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 
 
-<h1 class="title toc-ignore">Avoiding model refits in leave-one-out cross-validation with moment matching</h1>
-<h4 class="author">Topi Paananen, Paul Bürkner, Aki Vehtari and Jonah Gabry</h4>
-<h4 class="date">2022-03-23</h4>
+<h1 class="title toc-ignore">Avoiding model refits in leave-one-out
+cross-validation with moment matching</h1>
+<h4 class="author">Topi Paananen, Paul Bürkner, Aki Vehtari and Jonah
+Gabry</h4>
+<h4 class="date">2023-03-30</h4>
 
 
 <div id="TOC">
 <ul>
-<li><a href="#introduction">Introduction</a></li>
-<li><a href="#example-eradication-of-roaches">Example: Eradication of Roaches</a>
+<li><a href="#introduction" id="toc-introduction">Introduction</a></li>
+<li><a href="#example-eradication-of-roaches" id="toc-example-eradication-of-roaches">Example: Eradication of
+Roaches</a>
 <ul>
-<li><a href="#coding-the-stan-model">Coding the Stan model</a></li>
-<li><a href="#setup">Setup</a></li>
-<li><a href="#fitting-the-model-with-rstan">Fitting the model with RStan</a></li>
-<li><a href="#moment-matching-correction-for-importance-sampling">Moment matching correction for importance sampling</a></li>
+<li><a href="#coding-the-stan-model" id="toc-coding-the-stan-model">Coding the Stan model</a></li>
+<li><a href="#setup" id="toc-setup">Setup</a></li>
+<li><a href="#fitting-the-model-with-rstan" id="toc-fitting-the-model-with-rstan">Fitting the model with
+RStan</a></li>
+<li><a href="#moment-matching-correction-for-importance-sampling" id="toc-moment-matching-correction-for-importance-sampling">Moment
+matching correction for importance sampling</a></li>
 </ul></li>
-<li><a href="#using-loo_moment_match-directly">Using <code>loo_moment_match()</code> directly</a></li>
-<li><a href="#references">References</a></li>
+<li><a href="#using-loo_moment_match-directly" id="toc-using-loo_moment_match-directly">Using
+<code>loo_moment_match()</code> directly</a></li>
+<li><a href="#references" id="toc-references">References</a></li>
 </ul>
 </div>
 
@@ -165,23 +370,49 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 -->
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
-<p>This vignette demonstrates how to improve the Monte Carlo sampling accuracy of leave-one-out cross-validation with the <strong>loo</strong> package and Stan. The <strong>loo</strong> package automatically monitors the sampling accuracy using Pareto <span class="math inline">\(k\)</span> diagnostics for each observation. Here, we present a method for quickly improving the accuracy when the Pareto diagnostics indicate problems. This is done by performing some additional computations using the existing posterior sample. If successful, this will decrease the Pareto <span class="math inline">\(k\)</span> values, making the model assessment more reliable. <strong>loo</strong> also stores the original Pareto <span class="math inline">\(k\)</span> values with the name <code>influence_pareto_k</code> which are not changed. They can be used as a diagnostic of how much each observation influences the posterior distribution.</p>
+<p>This vignette demonstrates how to improve the Monte Carlo sampling
+accuracy of leave-one-out cross-validation with the <strong>loo</strong>
+package and Stan. The <strong>loo</strong> package automatically
+monitors the sampling accuracy using Pareto <span class="math inline">\(k\)</span> diagnostics for each observation. Here,
+we present a method for quickly improving the accuracy when the Pareto
+diagnostics indicate problems. This is done by performing some
+additional computations using the existing posterior sample. If
+successful, this will decrease the Pareto <span class="math inline">\(k\)</span> values, making the model assessment
+more reliable. <strong>loo</strong> also stores the original Pareto
+<span class="math inline">\(k\)</span> values with the name
+<code>influence_pareto_k</code> which are not changed. They can be used
+as a diagnostic of how much each observation influences the posterior
+distribution.</p>
 <p>The methodology presented is based on the paper</p>
 <ul>
-<li>Paananen, T., Piironen, J., Buerkner, P.-C., Vehtari, A. (2020). Implicitly Adaptive Importance Sampling. <a href="https://arxiv.org/abs/1906.08850">arXiv preprint arXiv:1906.08850</a>.</li>
+<li>Paananen, T., Piironen, J., Buerkner, P.-C., Vehtari, A. (2020).
+Implicitly Adaptive Importance Sampling. <a href="https://arxiv.org/abs/1906.08850">arXiv preprint
+arXiv:1906.08850</a>.</li>
 </ul>
-<p>More information about the Pareto <span class="math inline">\(k\)</span> diagnostics is given in the following papers</p>
+<p>More information about the Pareto <span class="math inline">\(k\)</span> diagnostics is given in the following
+papers</p>
 <ul>
-<li><p>Vehtari, A., Gelman, A., and Gabry, J. (2017). Practical Bayesian model evaluation using leave-one-out cross-validation and WAIC. <em>Statistics and Computing</em>. 27(5), 1413–1432. :10.1007/s11222-016-9696-4. Links: <a href="https://link.springer.com/article/10.1007/s11222-016-9696-4">published</a> | <a href="https://arxiv.org/abs/1507.04544">arXiv preprint</a>.</p></li>
-<li><p>Vehtari, A., Simpson, D., Gelman, A., Yao, Y., and Gabry, J. (2019). Pareto smoothed importance sampling. <a href="https://arxiv.org/abs/1507.02646">arXiv preprint arXiv:1507.02646</a>.</p></li>
+<li><p>Vehtari, A., Gelman, A., and Gabry, J. (2017). Practical Bayesian
+model evaluation using leave-one-out cross-validation and WAIC.
+<em>Statistics and Computing</em>. 27(5), 1413–1432.
+:10.1007/s11222-016-9696-4. Links: <a href="https://link.springer.com/article/10.1007/s11222-016-9696-4">published</a>
+| <a href="https://arxiv.org/abs/1507.04544">arXiv
+preprint</a>.</p></li>
+<li><p>Vehtari, A., Simpson, D., Gelman, A., Yao, Y., and Gabry, J.
+(2019). Pareto smoothed importance sampling. <a href="https://arxiv.org/abs/1507.02646">arXiv preprint
+arXiv:1507.02646</a>.</p></li>
 </ul>
 </div>
 <div id="example-eradication-of-roaches" class="section level1">
 <h1>Example: Eradication of Roaches</h1>
-<p>We will use the same example as in the vignette <a href="https://mc-stan.org/loo/articles/loo2-example.html"><em>Using the loo package (version &gt;= 2.0.0)</em></a>. See the demo for a description of the problem and data. We will use the same Poisson regression model as in the case study.</p>
+<p>We will use the same example as in the vignette <a href="https://mc-stan.org/loo/articles/loo2-example.html"><em>Using the
+loo package (version &gt;= 2.0.0)</em></a>. See the demo for a
+description of the problem and data. We will use the same Poisson
+regression model as in the case study.</p>
 <div id="coding-the-stan-model" class="section level2">
 <h2>Coding the Stan model</h2>
-<p>Here is the Stan code for fitting the Poisson regression model, which we will use for modeling the number of roaches.</p>
+<p>Here is the Stan code for fitting the Poisson regression model, which
+we will use for modeling the number of roaches.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>stancode <span class="ot">&lt;-</span> <span class="st">&quot;</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="st">data {</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="st">  int&lt;lower=1&gt; K;</span></span>
@@ -208,11 +439,16 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="st">    log_lik[n] = poisson_lpmf(y[n] | exp(x[n] * beta + intercept + offset[n]));</span></span>
 <span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="st">}</span></span>
 <span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span></span></code></pre></div>
-<p>Following the usual approach recommended in <a href="http://mc-stan.org/loo/articles/loo2-with-rstan.html"><em>Writing Stan programs for use with the loo package</em></a>, we compute the log-likelihood for each observation in the <code>generated quantities</code> block of the Stan program.</p>
+<p>Following the usual approach recommended in <a href="http://mc-stan.org/loo/articles/loo2-with-rstan.html"><em>Writing
+Stan programs for use with the loo package</em></a>, we compute the
+log-likelihood for each observation in the
+<code>generated quantities</code> block of the Stan program.</p>
 </div>
 <div id="setup" class="section level2">
 <h2>Setup</h2>
-<p>In addition to <strong>loo</strong>, we load the <strong>rstan</strong> package for fitting the model, and the <strong>rstanarm</strong> package for the data.</p>
+<p>In addition to <strong>loo</strong>, we load the
+<strong>rstan</strong> package for fitting the model, and the
+<strong>rstanarm</strong> package for the data.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;rstan&quot;</span>)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;loo&quot;</span>)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>seed <span class="ot">&lt;-</span> <span class="dv">9547</span></span>
@@ -220,7 +456,8 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <div id="fitting-the-model-with-rstan" class="section level2">
 <h2>Fitting the model with RStan</h2>
-<p>Next we fit the model in Stan using the <strong>rstan</strong> package:</p>
+<p>Next we fit the model in Stan using the <strong>rstan</strong>
+package:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Prepare data</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(roaches, <span class="at">package =</span> <span class="st">&quot;rstanarm&quot;</span>)</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>roaches<span class="sc">$</span>roach1 <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(roaches<span class="sc">$</span>roach1)</span>
@@ -247,11 +484,12 @@ beta[1]  0.16       0 0.00  0.16  0.16  0.16  0.16  0.16  2344    1
 beta[2] -0.57       0 0.03 -0.62 -0.59 -0.57 -0.55 -0.52  2395    1
 beta[3] -0.31       0 0.03 -0.38 -0.34 -0.31 -0.29 -0.25  2135    1
 
-Samples were drawn using NUTS(diag_e) at Wed Mar 23 14:12:20 2022.
+Samples were drawn using NUTS(diag_e) at Thu Mar 30 23:06:35 2023.
 For each parameter, n_eff is a crude measure of effective sample size,
 and Rhat is the potential scale reduction factor on split chains (at 
 convergence, Rhat=1).</code></pre>
-<p>Let us now evaluate the predictive performance of the model using <code>loo()</code>.</p>
+<p>Let us now evaluate the predictive performance of the model using
+<code>loo()</code>.</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>loo1 <span class="ot">&lt;-</span> <span class="fu">loo</span>(fit)</span></code></pre></div>
 <pre><code>Warning: Some Pareto k diagnostic values are too high. See help(&#39;pareto-k-diagnostic&#39;) for details.</code></pre>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>loo1</span></code></pre></div>
@@ -272,13 +510,38 @@ Pareto k diagnostic values:
    (0.7, 1]   (bad)        7    2.7%   24        
    (1, Inf)   (very bad)   7    2.7%   2         
 See help(&#39;pareto-k-diagnostic&#39;) for details.</code></pre>
-<p>The <code>loo()</code> function output warnings that there are some observations which are highly influential, and thus the accuracy of importance sampling is compromised as indicated by the large Pareto <span class="math inline">\(k\)</span> diagnostic values (&gt; 0.7). As discussed in the vignette <a href="https://mc-stan.org/loo/articles/loo2-example.html"><em>Using the loo package (version &gt;= 2.0.0)</em></a>, this may be an indication of model misspecification. Despite that, it is still beneficial to be able to evaluate the predictive performance of the model accurately.</p>
+<p>The <code>loo()</code> function output warnings that there are some
+observations which are highly influential, and thus the accuracy of
+importance sampling is compromised as indicated by the large Pareto
+<span class="math inline">\(k\)</span> diagnostic values (&gt; 0.7). As
+discussed in the vignette <a href="https://mc-stan.org/loo/articles/loo2-example.html"><em>Using the
+loo package (version &gt;= 2.0.0)</em></a>, this may be an indication of
+model misspecification. Despite that, it is still beneficial to be able
+to evaluate the predictive performance of the model accurately.</p>
 </div>
 <div id="moment-matching-correction-for-importance-sampling" class="section level2">
 <h2>Moment matching correction for importance sampling</h2>
-<p>To improve the accuracy of the <code>loo()</code> result above, we could perform leave-one-out cross-validation by explicitly leaving out single observations and refitting the model using MCMC repeatedly. However, the Pareto <span class="math inline">\(k\)</span> diagnostics indicate that there are 19 observations which are problematic. This would require 19 model refits which may require a lot of computation time.</p>
-<p>Instead of refitting with MCMC, we can perform a faster moment matching correction to the importance sampling for the problematic observations. This can be done with the <code>loo_moment_match()</code> function in the <strong>loo</strong> package, which takes our existing <code>loo</code> object as input and modifies it. The moment matching requires some evaluations of the model posterior density. For models fitted with <strong>rstan</strong>, this can be conveniently done by using the existing <code>stanfit</code> object.</p>
-<p>First, we show how the moment matching can be used for a model fitted using <strong>rstan</strong>. It only requires setting the argument <code>moment_match</code> to <code>TRUE</code> in the <code>loo()</code> function. Optionally, you can also set the argument <code>k_threshold</code> which determines the Pareto <span class="math inline">\(k\)</span> threshold, above which moment matching is used. By default, it operates on all observations whose Pareto <span class="math inline">\(k\)</span> value is larger than 0.7.</p>
+<p>To improve the accuracy of the <code>loo()</code> result above, we
+could perform leave-one-out cross-validation by explicitly leaving out
+single observations and refitting the model using MCMC repeatedly.
+However, the Pareto <span class="math inline">\(k\)</span> diagnostics
+indicate that there are 19 observations which are problematic. This
+would require 19 model refits which may require a lot of computation
+time.</p>
+<p>Instead of refitting with MCMC, we can perform a faster moment
+matching correction to the importance sampling for the problematic
+observations. This can be done with the <code>loo_moment_match()</code>
+function in the <strong>loo</strong> package, which takes our existing
+<code>loo</code> object as input and modifies it. The moment matching
+requires some evaluations of the model posterior density. For models
+fitted with <strong>rstan</strong>, this can be conveniently done by
+using the existing <code>stanfit</code> object.</p>
+<p>First, we show how the moment matching can be used for a model fitted
+using <strong>rstan</strong>. It only requires setting the argument
+<code>moment_match</code> to <code>TRUE</code> in the <code>loo()</code>
+function. Optionally, you can also set the argument
+<code>k_threshold</code> which determines the Pareto <span class="math inline">\(k\)</span> threshold, above which moment matching
+is used. By default, it operates on all observations whose Pareto <span class="math inline">\(k\)</span> value is larger than 0.7.</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># available in rstan &gt;= 2.21</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>loo2 <span class="ot">&lt;-</span> <span class="fu">loo</span>(fit, <span class="at">moment_match =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
 <pre><code>Warning: Some Pareto k diagnostic values are slightly high. See help(&#39;pareto-k-diagnostic&#39;) for details.</code></pre>
@@ -302,36 +565,73 @@ Pareto k diagnostic values:
 
 All Pareto k estimates are ok (k &lt; 0.7).
 See help(&#39;pareto-k-diagnostic&#39;) for details.</code></pre>
-<p>After the moment matching, all observations have the diagnostic Pareto <span class="math inline">\(k\)</span> less than 0.7, meaning that the estimates are now reliable. The total <code>elpd_loo</code> estimate also changed from <code>-5457.8</code> to <code>-5478.5</code>, showing that before moment matching, <code>loo()</code> overestimated the predictive performance of the model.</p>
-<p>The updated Pareto <span class="math inline">\(k\)</span> values stored in <code>loo2$diagnostics$pareto_k</code> are considered algorithmic diagnostic values that indicate the sampling accuracy. The original Pareto <span class="math inline">\(k\)</span> values are stored in <code>loo2$pointwise[,&quot;influence_pareto_k&quot;]</code> and these are not modified by the moment matching. These can be considered as diagnostics for how big influence each observation has on the posterior distribution. In addition to the Pareto <span class="math inline">\(k\)</span> diagnostics, moment matching also updates the effective sample size estimates.</p>
+<p>After the moment matching, all observations have the diagnostic
+Pareto <span class="math inline">\(k\)</span> less than 0.7, meaning
+that the estimates are now reliable. The total <code>elpd_loo</code>
+estimate also changed from <code>-5457.8</code> to <code>-5478.5</code>,
+showing that before moment matching, <code>loo()</code> overestimated
+the predictive performance of the model.</p>
+<p>The updated Pareto <span class="math inline">\(k\)</span> values
+stored in <code>loo2$diagnostics$pareto_k</code> are considered
+algorithmic diagnostic values that indicate the sampling accuracy. The
+original Pareto <span class="math inline">\(k\)</span> values are stored
+in <code>loo2$pointwise[,&quot;influence_pareto_k&quot;]</code> and these are not
+modified by the moment matching. These can be considered as diagnostics
+for how big influence each observation has on the posterior
+distribution. In addition to the Pareto <span class="math inline">\(k\)</span> diagnostics, moment matching also
+updates the effective sample size estimates.</p>
 </div>
 </div>
 <div id="using-loo_moment_match-directly" class="section level1">
 <h1>Using <code>loo_moment_match()</code> directly</h1>
-<p>The moment matching can also be performed by explicitly calling the function <code>loo_moment_match()</code>. This enables its use also for models that are not using <strong>rstan</strong> or another package with built-in support for <code>loo_moment_match()</code>. To use <code>loo_moment_match()</code>, the user must give the model object <code>x</code>, the <code>loo</code> object, and 5 helper functions as arguments to <code>loo_moment_match()</code>. The helper functions are</p>
+<p>The moment matching can also be performed by explicitly calling the
+function <code>loo_moment_match()</code>. This enables its use also for
+models that are not using <strong>rstan</strong> or another package with
+built-in support for <code>loo_moment_match()</code>. To use
+<code>loo_moment_match()</code>, the user must give the model object
+<code>x</code>, the <code>loo</code> object, and 5 helper functions as
+arguments to <code>loo_moment_match()</code>. The helper functions
+are</p>
 <ul>
 <li><code>post_draws</code>
 <ul>
-<li>A function the takes <code>x</code> as the first argument and returns a matrix of posterior draws of the model parameters, <code>pars</code>.</li>
+<li>A function the takes <code>x</code> as the first argument and
+returns a matrix of posterior draws of the model parameters,
+<code>pars</code>.</li>
 </ul></li>
 <li><code>log_lik_i</code>
 <ul>
-<li>A function that takes <code>x</code> and <code>i</code> and returns a matrix (one column per chain) or a vector (all chains stacked) of log-likeliood draws of the ith observation based on the model <code>x</code>. If the draws are obtained using MCMC, the matrix with MCMC chains separated is preferred.</li>
+<li>A function that takes <code>x</code> and <code>i</code> and returns
+a matrix (one column per chain) or a vector (all chains stacked) of
+log-likeliood draws of the ith observation based on the model
+<code>x</code>. If the draws are obtained using MCMC, the matrix with
+MCMC chains separated is preferred.</li>
 </ul></li>
 <li><code>unconstrain_pars</code>
 <ul>
-<li>A function that takes arguments <code>x</code> and <code>pars</code>, and returns posterior draws on the unconstrained space based on the posterior draws on the constrained space passed via <code>pars</code>.</li>
+<li>A function that takes arguments <code>x</code> and
+<code>pars</code>, and returns posterior draws on the unconstrained
+space based on the posterior draws on the constrained space passed via
+<code>pars</code>.</li>
 </ul></li>
 <li><code>log_prob_upars</code>
 <ul>
-<li>A function that takes arguments <code>x</code> and <code>upars</code>, and returns a matrix of log-posterior density values of the unconstrained posterior draws passed via <code>upars</code>.</li>
+<li>A function that takes arguments <code>x</code> and
+<code>upars</code>, and returns a matrix of log-posterior density values
+of the unconstrained posterior draws passed via <code>upars</code>.</li>
 </ul></li>
 <li><code>log_lik_i_upars</code>
 <ul>
-<li>A function that takes arguments <code>x</code>, <code>upars</code>, and <code>i</code> and returns a vector of log-likelihood draws of the <code>i</code>th observation based on the unconstrained posterior draws passed via <code>upars</code>.</li>
+<li>A function that takes arguments <code>x</code>, <code>upars</code>,
+and <code>i</code> and returns a vector of log-likelihood draws of the
+<code>i</code>th observation based on the unconstrained posterior draws
+passed via <code>upars</code>.</li>
 </ul></li>
 </ul>
-<p>Next, we show how the helper functions look like for RStan objects, and show an example of using <code>loo_moment_match()</code> directly. For stanfit objects from <strong>rstan</strong> objects, the functions look like this:</p>
+<p>Next, we show how the helper functions look like for RStan objects,
+and show an example of using <code>loo_moment_match()</code> directly.
+For stanfit objects from <strong>rstan</strong> objects, the functions
+look like this:</p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create a named list of draws for use with rstan methods</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>.rstan_relist <span class="ot">&lt;-</span> <span class="cf">function</span>(x, skeleton) {</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  out <span class="ot">&lt;-</span> utils<span class="sc">::</span><span class="fu">relist</span>(x, skeleton)</span>
@@ -392,7 +692,8 @@ See help(&#39;pareto-k-diagnostic&#39;) for details.</code></pre>
 <span id="cb13-58"><a href="#cb13-58" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb13-59"><a href="#cb13-59" aria-hidden="true" tabindex="-1"></a>  out</span>
 <span id="cb13-60"><a href="#cb13-60" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<p>Using these function, we can call <code>loo_moment_match()</code> to update the existing <code>loo</code> object.</p>
+<p>Using these function, we can call <code>loo_moment_match()</code> to
+update the existing <code>loo</code> object.</p>
 <div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>loo3 <span class="ot">&lt;-</span> loo<span class="sc">::</span><span class="fu">loo_moment_match.default</span>(</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> fit,</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">loo =</span> loo1,</span>
@@ -423,15 +724,27 @@ Pareto k diagnostic values:
 
 All Pareto k estimates are ok (k &lt; 0.7).
 See help(&#39;pareto-k-diagnostic&#39;) for details.</code></pre>
-<p>As expected, the result is identical to the previous result of <code>loo2 &lt;- loo(fit, moment_match = TRUE)</code>.</p>
+<p>As expected, the result is identical to the previous result of
+<code>loo2 &lt;- loo(fit, moment_match = TRUE)</code>.</p>
 </div>
 <div id="references" class="section level1">
 <h1>References</h1>
-<p>Gelman, A., and Hill, J. (2007). <em>Data Analysis Using Regression and Multilevel Hierarchical Models.</em> Cambridge University Press.</p>
-<p>Stan Development Team (2020) <em>RStan: the R interface to Stan, Version 2.21.1</em> <a href="https://mc-stan.org" class="uri">https://mc-stan.org</a></p>
-<p>Paananen, T., Piironen, J., Buerkner, P.-C., Vehtari, A. (2021). Implicitly adaptive importance sampling. <em>Statistics and Computing</em>, 31, 16. :10.1007/s11222-020-09982-2. arXiv preprint arXiv:1906.08850.</p>
-<p>Vehtari, A., Gelman, A., and Gabry, J. (2017). Practical Bayesian model evaluation using leave-one-out cross-validation and WAIC. <em>Statistics and Computing</em>. 27(5), 1413–1432. :10.1007/s11222-016-9696-4. Links: <a href="https://link.springer.com/article/10.1007/s11222-016-9696-4">published</a> | <a href="https://arxiv.org/abs/1507.04544">arXiv preprint</a>.</p>
-<p>Vehtari, A., Simpson, D., Gelman, A., Yao, Y., and Gabry, J. (2019). Pareto smoothed importance sampling. <a href="https://arxiv.org/abs/1507.02646">arXiv preprint arXiv:1507.02646</a>.</p>
+<p>Gelman, A., and Hill, J. (2007). <em>Data Analysis Using Regression
+and Multilevel Hierarchical Models.</em> Cambridge University Press.</p>
+<p>Stan Development Team (2020) <em>RStan: the R interface to Stan,
+Version 2.21.1</em> <a href="https://mc-stan.org" class="uri">https://mc-stan.org</a></p>
+<p>Paananen, T., Piironen, J., Buerkner, P.-C., Vehtari, A. (2021).
+Implicitly adaptive importance sampling. <em>Statistics and
+Computing</em>, 31, 16. :10.1007/s11222-020-09982-2. arXiv preprint
+arXiv:1906.08850.</p>
+<p>Vehtari, A., Gelman, A., and Gabry, J. (2017). Practical Bayesian
+model evaluation using leave-one-out cross-validation and WAIC.
+<em>Statistics and Computing</em>. 27(5), 1413–1432.
+:10.1007/s11222-016-9696-4. Links: <a href="https://link.springer.com/article/10.1007/s11222-016-9696-4">published</a>
+| <a href="https://arxiv.org/abs/1507.04544">arXiv preprint</a>.</p>
+<p>Vehtari, A., Simpson, D., Gelman, A., Yao, Y., and Gabry, J. (2019).
+Pareto smoothed importance sampling. <a href="https://arxiv.org/abs/1507.02646">arXiv preprint
+arXiv:1507.02646</a>.</p>
 </div>
 
 
