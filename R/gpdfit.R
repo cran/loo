@@ -49,7 +49,7 @@ gpdfit <- function(x, wip = TRUE, min_grid_pts = 30, sort_x = TRUE) {
     k <- adjust_k_wip(k, n = N)
   }
 
-  if (is.nan(k)) {
+  if (is.na(k)) {
     k <- Inf
   }
 
@@ -81,7 +81,7 @@ adjust_k_wip <- function(k, n) {
 }
 
 
-#' Inverse CDF of generalized pareto distribution
+#' Inverse CDF of generalized Pareto distribution
 #' (assuming location parameter is 0)
 #'
 #' @noRd

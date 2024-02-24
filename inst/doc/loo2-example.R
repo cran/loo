@@ -51,7 +51,7 @@ plot(loo1)
 ## ----ppc_loo_pit_overlay------------------------------------------------------
 yrep <- posterior_predict(fit1)
 
-ppc_loo_pit_overlay(
+ppc_loo_pit_qq(
   y = roaches$y,
   yrep = yrep,
   lw = weights(loo1$psis_object)
@@ -75,7 +75,7 @@ print(loo2)
 
 ## ----ppc_loo_pit_overlay-negbin-----------------------------------------------
 yrep <- posterior_predict(fit2)
-ppc_loo_pit_overlay(roaches$y, yrep, lw = weights(loo2$psis_object))
+ppc_loo_pit_qq(roaches$y, yrep, lw = weights(loo2$psis_object))
 
 ## ----loo_compare--------------------------------------------------------------
 loo_compare(loo1, loo2)

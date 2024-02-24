@@ -22,8 +22,8 @@ knitr::opts_chunk$set(
 )
 
 ## ----pkgs, cache=FALSE--------------------------------------------------------
-library("loo")
 library("brms")
+library("loo")
 library("bayesplot")
 library("ggplot2")
 color_scheme_set("brightblue")
@@ -68,7 +68,7 @@ preds <- cbind(
 )
 
 ggplot(cbind(df, preds), aes(x = year, y = Estimate)) +
-  geom_smooth(aes(ymin = Q5, ymax = Q95), stat = "identity", size = 0.5) +
+  geom_smooth(aes(ymin = Q5, ymax = Q95), stat = "identity", linewidth = 0.5) +
   geom_point(aes(y = y)) + 
   labs(
     y = "Water Level (ft)", 
@@ -85,7 +85,7 @@ loo_cv <- loo(log_lik(fit)[, (L + 1):N])
 print(loo_cv)
 
 ## ----exact_loglik, results="hide"---------------------------------------------
-loglik_exact <- matrix(nrow = nsamples(fit), ncol = N)
+loglik_exact <- matrix(nrow = ndraws(fit), ncol = N)
 for (i in L:(N - 1)) {
   past <- 1:i
   oos <- i + 1
@@ -220,7 +220,7 @@ rbind_print(
 
 ## ----exact_loglikm, results="hide"--------------------------------------------
 M <- 4
-loglikm <- matrix(nrow = nsamples(fit), ncol = N)
+loglikm <- matrix(nrow = ndraws(fit), ncol = N)
 for (i in L:(N - M)) {
   past <- 1:i
   oos <- (i + 1):(i + M)
@@ -246,7 +246,7 @@ df_oos <- df[c(past, oos), , drop = FALSE]
 fit_past <- update(fit, newdata = df_past, recompile = FALSE)
 loglik <- log_lik(fit_past, newdata = df_oos, oos = oos)
 loglikm <- rowSums(loglik[, oos])
-approx_elpds_1sap[L + 1] <- log_mean_exp(loglikm)
+approx_elpds_4sap[L + 1] <- log_mean_exp(loglikm)
 
 # iterate over i > L
 i_refit <- L

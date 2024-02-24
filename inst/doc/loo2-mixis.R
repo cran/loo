@@ -14,7 +14,7 @@ opts_chunk$set(
   fig.align = "center"
 )
 
-## ---- warnings=FALSE, message=FALSE-------------------------------------------
+## ----warnings=FALSE, message=FALSE--------------------------------------------
 library("rstan")
 library("loo")
 library("matrixStats")
@@ -22,14 +22,17 @@ options(mc.cores = parallel::detectCores(), parallel=FALSE)
 set.seed(24877)
 
 ## ----stancode_horseshoe-------------------------------------------------------
+# Note: some syntax used in this program requires RStan >= 2.26 (or CmdStanR)
+# To use an older version of RStan change the line declaring `y` to:
+#    int<lower=0,upper=1> y[N];
 stancode_horseshoe <- "
 data {
-  int <lower=0> n;                
-  int <lower=0> p;                
-  int <lower=0, upper=1> y[n];    
-  matrix [n,p] X;                
+  int <lower=0> N;
+  int <lower=0> P;
+  array[N] int <lower=0, upper=1> y;
+  matrix [N,P] X;
   real <lower=0> scale_global;
-  int <lower=0,upper=1> mixis;                
+  int <lower=0,upper=1> mixis;
 }
 transformed data {
   real<lower=1> nu_global=1; // degrees of freedom for the half-t priors for tau
@@ -39,29 +42,29 @@ transformed data {
   real<lower=0> slab_df=100; // for the regularized horseshoe
 }
 parameters {
-  vector[p] z;                // for non-centered parameterization
+  vector[P] z;                // for non-centered parameterization
   real <lower=0> tau;         // global shrinkage parameter
-  vector <lower=0>[p] lambda; // local shrinkage parameter
+  vector <lower=0>[P] lambda; // local shrinkage parameter
   real<lower=0> caux;
 }
 transformed parameters {
-  vector[p] beta;
+  vector[P] beta;
   { 
-    vector[p] lambda_tilde;   // 'truncated' local shrinkage parameter
+    vector[P] lambda_tilde;   // 'truncated' local shrinkage parameter
     real c = slab_scale * sqrt(caux); // slab scale
     lambda_tilde = sqrt( c^2 * square(lambda) ./ (c^2 + tau^2*square(lambda)));
     beta = z .* lambda_tilde*tau;
   }
 }
 model {
-  vector[n] means=X*beta;
-  vector[n] log_lik;
+  vector[N] means=X*beta;
+  vector[N] log_lik;
   target += std_normal_lpdf(z);
   target += student_t_lpdf(lambda | nu_local, 0, 1);
   target += student_t_lpdf(tau | nu_global, 0, scale_global);
   target += inv_gamma_lpdf(caux | 0.5*slab_df, 0.5*slab_df);
-  for (index in 1:n) {
-    log_lik[index]= bernoulli_logit_lpmf(y[index] | means[index]);
+  for (n in 1:N) {
+    log_lik[n]= bernoulli_logit_lpmf(y[n] | means[n]);
   }
   target += sum(log_lik);
   if (mixis) {
@@ -69,15 +72,15 @@ model {
   }
 }
 generated quantities {
-  vector[n] means=X*beta;
-  vector[n] log_lik;
-  for (index in 1:n) {
-    log_lik[index] = bernoulli_logit_lpmf(y[index] | means[index]);
+  vector[N] means=X*beta;
+  vector[N] log_lik;
+  for (n in 1:N) {
+    log_lik[n] = bernoulli_logit_lpmf(y[n] | means[n]);
   }
 }
 "
 
-## ---- results='hide', warning=FALSE, message=FALSE, error=FALSE---------------
+## ----results='hide', warning=FALSE, message=FALSE, error=FALSE----------------
 data(voice)
 y <- voice$y
 X <- voice[2:length(voice)]
@@ -85,9 +88,9 @@ n <- dim(X)[1]
 p <- dim(X)[2]
 p0 <- 10
 scale_global <- 2*p0/(p-p0)/sqrt(n-1)
-standata <- list(n = n, p = p, X = as.matrix(X), y = c(y), scale_global = scale_global, mixis = 0)
+standata <- list(N = n, P = p, X = as.matrix(X), y = c(y), scale_global = scale_global, mixis = 0)
 
-## ---- results='hide', warning=FALSE-------------------------------------------
+## ----results='hide', warning=FALSE--------------------------------------------
 chains <- 4
 n_iter <- 2000
 warm_iter <- 1000
@@ -98,7 +101,7 @@ loo_post <-loo(fit_post)
 ## -----------------------------------------------------------------------------
 print(loo_post)
 
-## ---- results='hide', warnings=FALSE------------------------------------------
+## ----results='hide', warnings=FALSE-------------------------------------------
 standata$mixis <- 1
 fit_mix <- sampling(stanmodel, data = standata, chains = chains, iter = n_iter, warmup = warm_iter, refresh = 0, pars = "log_lik")
 log_lik_mix <- extract(fit_mix)$log_lik

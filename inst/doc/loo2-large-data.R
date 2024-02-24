@@ -28,7 +28,7 @@ llfun_logistic <- function(data_i, draws, log = TRUE) {
   dbinom(x = data_i$y, size = 1, prob = 1/(1 + exp(-logit_pred)), log = log)
 }
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  # Prepare data
 #  url <- "http://stat.columbia.edu/~gelman/arm/examples/arsenic/wells.dat"
 #  wells <- read.table(url)
@@ -43,7 +43,7 @@ llfun_logistic <- function(data_i, draws, log = TRUE) {
 #  fit_1 <- sampling(stan_mod, data = standata, seed = 4711)
 #  print(fit_1, pars = "beta")
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  # used for draws argument to loo_i
 #  parameter_draws_1 <- extract(fit_1)$beta
 #  
@@ -61,7 +61,7 @@ llfun_logistic <- function(data_i, draws, log = TRUE) {
 #  
 #  loo_i(i = 1, llfun_logistic, r_eff = r_eff, data = stan_df_1, draws = parameter_draws_1)
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  set.seed(4711)
 #  loo_ss_1 <-
 #    loo_subsample(
@@ -75,7 +75,7 @@ llfun_logistic <- function(data_i, draws, log = TRUE) {
 #    )
 #  print(loo_ss_1)
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  set.seed(4711)
 #  loo_ss_1b <-
 #    update(
@@ -87,7 +87,7 @@ llfun_logistic <- function(data_i, draws, log = TRUE) {
 #    )
 #  print(loo_ss_1b)
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  set.seed(4711)
 #  loo_ss_1c <-
 #    loo_subsample(
@@ -103,14 +103,14 @@ llfun_logistic <- function(data_i, draws, log = TRUE) {
 #    )
 #  print(loo_ss_1c)
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  fit_laplace <- optimizing(stan_mod, data = standata, draws = 2000,
 #                            importance_resampling = TRUE)
 #  parameter_draws_laplace <- fit_laplace$theta_tilde # draws from approximate posterior
 #  log_p <- fit_laplace$log_p # log density of the posterior
 #  log_g <- fit_laplace$log_g # log density of the approximation
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  set.seed(4711)
 #  loo_ap_1 <-
 #    loo_approximate_posterior(
@@ -123,7 +123,7 @@ llfun_logistic <- function(data_i, draws, log = TRUE) {
 #    )
 #  print(loo_ap_1)
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  set.seed(4711)
 #  loo_ap_ss_1 <-
 #    loo_subsample(
@@ -137,7 +137,7 @@ llfun_logistic <- function(data_i, draws, log = TRUE) {
 #    )
 #  print(loo_ap_ss_1)
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  standata$X[, "arsenic"] <- log(standata$X[, "arsenic"])
 #  fit_2 <- sampling(stan_mod, data = standata)
 #  parameter_draws_2 <- extract(fit_2)$beta
@@ -187,12 +187,12 @@ llfun_logistic <- function(data_i, draws, log = TRUE) {
 #  
 #  print(loo_ss_2)
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  # Compare
 #  comp <- loo_compare(loo_ss_1, loo_ss_2)
 #  print(comp)
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  loo_ss_2 <-
 #    loo_subsample(
 #      x = llfun_logistic,
@@ -203,7 +203,7 @@ llfun_logistic <- function(data_i, draws, log = TRUE) {
 #      cores = 2
 #    )
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  idx <- obs_idx(loo_ss_1)
 #  loo_ss_2 <- loo_subsample(
 #    x = llfun_logistic,
@@ -214,11 +214,11 @@ llfun_logistic <- function(data_i, draws, log = TRUE) {
 #    cores = 2
 #  )
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  comp <- loo_compare(loo_ss_1, loo_ss_2)
 #  print(comp)
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  # use loo() instead of loo_subsample() to compute full PSIS-LOO for model 2
 #  loo_full_2 <- loo(
 #    x = llfun_logistic,

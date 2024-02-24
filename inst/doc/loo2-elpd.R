@@ -15,12 +15,14 @@ opts_chunk$set(
 )
 
 ## ----stancode-----------------------------------------------------------------
+# Note: some syntax used in this Stan program requires RStan >= 2.26 (or CmdStanR)
+# To use an older version of RStan change the line declaring `y` to: int y[N];
 stancode <- "
 data {
   int<lower=1> K;
   int<lower=1> N;
   matrix[N,K] x;
-  int y[N];
+  array[N] int y;
   vector[N] offset;
 
   real beta_prior_scale;

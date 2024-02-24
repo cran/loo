@@ -12,7 +12,7 @@
 
 <meta name="author" content="Aki Vehtari and Jonah Gabry" />
 
-<meta name="date" content="2023-03-30" />
+<meta name="date" content="2024-02-24" />
 
 <title>Writing Stan programs for use with the loo package</title>
 
@@ -341,7 +341,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h1 class="title toc-ignore">Writing Stan programs for use with the loo
 package</h1>
 <h4 class="author">Aki Vehtari and Jonah Gabry</h4>
-<h4 class="date">2023-03-30</h4>
+<h4 class="date">2024-02-24</h4>
 
 
 <div id="TOC">
@@ -381,7 +381,7 @@ model evaluation using leave-one-out cross-validation and WAIC.
 | <a href="https://arxiv.org/abs/1507.04544">arXiv
 preprint</a>.</p></li>
 <li><p>Vehtari, A., Simpson, D., Gelman, A., Yao, Y., and Gabry, J.
-(2019). Pareto smoothed importance sampling. <a href="https://arxiv.org/abs/1507.02646">arXiv preprint
+(2022). Pareto smoothed importance sampling. <a href="https://arxiv.org/abs/1507.02646">arXiv preprint
 arXiv:1507.04544</a>.</p></li>
 </ul>
 <p>which provide important background for understanding the methods
@@ -407,11 +407,14 @@ computations should be stable.</p>
 <h2>Coding the Stan model</h2>
 <p>Here is the Stan code for fitting the logistic regression model,
 which we save in a file called <code>logistic.stan</code>:</p>
-<pre><code>data {
-  int&lt;lower=0&gt; N;             // number of data points
-  int&lt;lower=0&gt; P;             // number of predictors (including intercept)
-  matrix[N,P] X;              // predictors (including 1s for intercept)
-  int&lt;lower=0,upper=1&gt; y[N];  // binary outcome
+<pre><code>// Note: some syntax used in this program requires RStan &gt;= 2.26 (or CmdStanR)
+// To use an older version of RStan change the line declaring `y` to:
+//    int&lt;lower=0,upper=1&gt; y[N];
+data {
+  int&lt;lower=0&gt; N;                   // number of data points
+  int&lt;lower=0&gt; P;                   // number of predictors (including intercept)
+  matrix[N,P] X;                    // predictors (including 1s for intercept)
+  array[N] int&lt;lower=0,upper=1&gt; y;  // binary outcome
 }
 parameters {
   vector[P] beta;
@@ -439,18 +442,18 @@ number of simulations (posterior draws) and <span class="math inline">\(N\)</spa
 <h2>Fitting the model with RStan</h2>
 <p>Next we fit the model in Stan using the <strong>rstan</strong>
 package:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;rstan&quot;</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Prepare data </span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>url <span class="ot">&lt;-</span> <span class="st">&quot;http://stat.columbia.edu/~gelman/arm/examples/arsenic/wells.dat&quot;</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>wells <span class="ot">&lt;-</span> <span class="fu">read.table</span>(url)</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>wells<span class="sc">$</span>dist100 <span class="ot">&lt;-</span> <span class="fu">with</span>(wells, dist <span class="sc">/</span> <span class="dv">100</span>)</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>X <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(<span class="sc">~</span> dist100 <span class="sc">+</span> arsenic, wells)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>standata <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">y =</span> wells<span class="sc">$</span><span class="cf">switch</span>, <span class="at">X =</span> X, <span class="at">N =</span> <span class="fu">nrow</span>(X), <span class="at">P =</span> <span class="fu">ncol</span>(X))</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Fit model</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>fit_1 <span class="ot">&lt;-</span> <span class="fu">stan</span>(<span class="st">&quot;logistic.stan&quot;</span>, <span class="at">data =</span> standata)</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(fit_1, <span class="at">pars =</span> <span class="st">&quot;beta&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;rstan&quot;</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="co"># Prepare data </span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>url <span class="ot">&lt;-</span> <span class="st">&quot;http://stat.columbia.edu/~gelman/arm/examples/arsenic/wells.dat&quot;</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>wells <span class="ot">&lt;-</span> <span class="fu">read.table</span>(url)</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>wells<span class="sc">$</span>dist100 <span class="ot">&lt;-</span> <span class="fu">with</span>(wells, dist <span class="sc">/</span> <span class="dv">100</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>X <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(<span class="sc">~</span> dist100 <span class="sc">+</span> arsenic, wells)</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>standata <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">y =</span> wells<span class="sc">$</span><span class="cf">switch</span>, <span class="at">X =</span> X, <span class="at">N =</span> <span class="fu">nrow</span>(X), <span class="at">P =</span> <span class="fu">ncol</span>(X))</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co"># Fit model</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>fit_1 <span class="ot">&lt;-</span> <span class="fu">stan</span>(<span class="st">&quot;logistic.stan&quot;</span>, <span class="at">data =</span> standata)</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="fu">print</span>(fit_1, <span class="at">pars =</span> <span class="st">&quot;beta&quot;</span>)</span></code></pre></div>
 <pre><code>         mean se_mean   sd  2.5%   25%   50%   75% 97.5% n_eff Rhat
 beta[1]  0.00       0 0.08 -0.16 -0.05  0.00  0.05  0.15  1964    1
 beta[2] -0.89       0 0.10 -1.09 -0.96 -0.89 -0.82 -0.68  2048    1
@@ -461,22 +464,22 @@ beta[3]  0.46       0 0.04  0.38  0.43  0.46  0.49  0.54  2198    1</code></pre>
 PSIS-LOO</h2>
 <p>We can then use the <strong>loo</strong> package to compute the
 efficient PSIS-LOO approximation to exact LOO-CV:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;loo&quot;</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract pointwise log-likelihood</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># using merge_chains=FALSE returns an array, which is easier to </span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># use with relative_eff()</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>log_lik_1 <span class="ot">&lt;-</span> <span class="fu">extract_log_lik</span>(fit_1, <span class="at">merge_chains =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co"># as of loo v2.0.0 we can optionally provide relative effective sample sizes</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co"># when calling loo, which allows for better estimates of the PSIS effective</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co"># sample sizes and Monte Carlo error</span></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>r_eff <span class="ot">&lt;-</span> <span class="fu">relative_eff</span>(<span class="fu">exp</span>(log_lik_1), <span class="at">cores =</span> <span class="dv">2</span>) </span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co"># preferably use more than 2 cores (as many cores as possible)</span></span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co"># will use value of &#39;mc.cores&#39; option if cores is not specified</span></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>loo_1 <span class="ot">&lt;-</span> <span class="fu">loo</span>(log_lik_1, <span class="at">r_eff =</span> r_eff, <span class="at">cores =</span> <span class="dv">2</span>)</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(loo_1)</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;loo&quot;</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co"># Extract pointwise log-likelihood</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co"># using merge_chains=FALSE returns an array, which is easier to </span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co"># use with relative_eff()</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>log_lik_1 <span class="ot">&lt;-</span> <span class="fu">extract_log_lik</span>(fit_1, <span class="at">merge_chains =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co"># as of loo v2.0.0 we can optionally provide relative effective sample sizes</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co"># when calling loo, which allows for better estimates of the PSIS effective</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co"># sample sizes and Monte Carlo error</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>r_eff <span class="ot">&lt;-</span> <span class="fu">relative_eff</span>(<span class="fu">exp</span>(log_lik_1), <span class="at">cores =</span> <span class="dv">2</span>) </span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co"># preferably use more than 2 cores (as many cores as possible)</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co"># will use value of &#39;mc.cores&#39; option if cores is not specified</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>loo_1 <span class="ot">&lt;-</span> <span class="fu">loo</span>(log_lik_1, <span class="at">r_eff =</span> r_eff, <span class="at">cores =</span> <span class="dv">2</span>)</span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="fu">print</span>(loo_1)</span></code></pre></div>
 <pre><code>Computed from 4000 by 3020 log-likelihood matrix
 
          Estimate   SE
@@ -485,8 +488,9 @@ p_loo         3.2  0.1
 looic      3937.0 31.2
 ------
 Monte Carlo SE of elpd_loo is 0.0.
+MCSE and ESS estimates assume MCMC draws (r_eff in [0.5, 1.3]).
 
-All Pareto k estimates are good (k &lt; 0.5).
+All Pareto k estimates are good (k &lt; 0.7).
 See help(&#39;pareto-k-diagnostic&#39;) for details.</code></pre>
 <p>The printed output from the <code>loo</code> function shows the
 estimates <span class="math inline">\(\widehat{\mbox{elpd}}_{\rm
@@ -508,13 +512,13 @@ can use the <code>loo_compare</code> function in the
 <strong>loo</strong> package. First we’ll fit a second model to the
 well-switching data, using <code>log(arsenic)</code> instead of
 <code>arsenic</code> as a predictor:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>standata<span class="sc">$</span>X[, <span class="st">&quot;arsenic&quot;</span>] <span class="ot">&lt;-</span> <span class="fu">log</span>(standata<span class="sc">$</span>X[, <span class="st">&quot;arsenic&quot;</span>])</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>fit_2 <span class="ot">&lt;-</span> <span class="fu">stan</span>(<span class="at">fit =</span> fit_1, <span class="at">data =</span> standata) </span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>log_lik_2 <span class="ot">&lt;-</span> <span class="fu">extract_log_lik</span>(fit_2, <span class="at">merge_chains =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>r_eff_2 <span class="ot">&lt;-</span> <span class="fu">relative_eff</span>(<span class="fu">exp</span>(log_lik_2))</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>loo_2 <span class="ot">&lt;-</span> <span class="fu">loo</span>(log_lik_2, <span class="at">r_eff =</span> r_eff_2, <span class="at">cores =</span> <span class="dv">2</span>)</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(loo_2)</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>standata<span class="sc">$</span>X[, <span class="st">&quot;arsenic&quot;</span>] <span class="ot">&lt;-</span> <span class="fu">log</span>(standata<span class="sc">$</span>X[, <span class="st">&quot;arsenic&quot;</span>])</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>fit_2 <span class="ot">&lt;-</span> <span class="fu">stan</span>(<span class="at">fit =</span> fit_1, <span class="at">data =</span> standata) </span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>log_lik_2 <span class="ot">&lt;-</span> <span class="fu">extract_log_lik</span>(fit_2, <span class="at">merge_chains =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>r_eff_2 <span class="ot">&lt;-</span> <span class="fu">relative_eff</span>(<span class="fu">exp</span>(log_lik_2))</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>loo_2 <span class="ot">&lt;-</span> <span class="fu">loo</span>(log_lik_2, <span class="at">r_eff =</span> r_eff_2, <span class="at">cores =</span> <span class="dv">2</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="fu">print</span>(loo_2)</span></code></pre></div>
 <pre><code>Computed from 4000 by 3020 log-likelihood matrix
 
          Estimate   SE
@@ -523,17 +527,18 @@ p_loo         3.1  0.1
 looic      3904.6 32.4
 ------
 Monte Carlo SE of elpd_loo is 0.0.
+MCSE and ESS estimates assume MCMC draws (r_eff in [0.4, 1.2]).
 
-All Pareto k estimates are good (k &lt; 0.5).
+All Pareto k estimates are good (k &lt; 0.7).
 See help(&#39;pareto-k-diagnostic&#39;) for details.</code></pre>
 <p>We can now compare the models on LOO using the
 <code>loo_compare</code> function:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compare</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>comp <span class="ot">&lt;-</span> <span class="fu">loo_compare</span>(loo_1, loo_2)</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="co"># Compare</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>comp <span class="ot">&lt;-</span> <span class="fu">loo_compare</span>(loo_1, loo_2)</span></code></pre></div>
 <p>This new object, <code>comp</code>, contains the estimated difference
 of expected leave-one-out prediction errors between the two models,
 along with the standard error:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(comp) <span class="co"># can set simplify=FALSE for more detailed print output</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">print</span>(comp) <span class="co"># can set simplify=FALSE for more detailed print output</span></span></code></pre></div>
 <pre><code>       elpd_diff se_diff
 model2   0.0       0.0  
 model1 -16.3       4.4  </code></pre>
@@ -558,7 +563,7 @@ model evaluation using leave-one-out cross-validation and WAIC.
 :10.1007/s11222-016-9696-4. <a href="https://link.springer.com/article/10.1007/s11222-016-9696-4">online</a>,
 <a href="https://arxiv.org/abs/1507.04544">arXiv preprint
 arXiv:1507.04544</a>.</p>
-<p>Vehtari, A., Simpson, D., Gelman, A., Yao, Y., and Gabry, J. (2019).
+<p>Vehtari, A., Simpson, D., Gelman, A., Yao, Y., and Gabry, J. (2022).
 Pareto smoothed importance sampling. <a href="https://arxiv.org/abs/1507.02646">arXiv preprint
 arXiv:1507.02646</a>.</p>
 </div>
