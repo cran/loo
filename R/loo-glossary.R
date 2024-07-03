@@ -76,7 +76,7 @@
 #'
 #' The diagnostic threshold for Pareto \eqn{k} depends on sample size
 #' \eqn{S} (sample size dependent threshold was introduced by Vehtari
-#' et al., 2022, and before that fixed thresholds of 0.5 and 0.7 were
+#' et al., 2024, and before that fixed thresholds of 0.5 and 0.7 were
 #' recommended). For simplicity, `loo` package uses the nominal sample
 #' size \eqn{S}  when computing the sample size specific
 #' threshold. This provides an optimistic threshold if the effective
@@ -84,15 +84,15 @@
 #' is usually negligible. Thinning of MCMC draws can be used to improve
 #' the ratio ESS/S.
 #'
-#' * If \eqn{k < min(1 - 1 / log10(S), 0.7)}, where \eqn{S} is the
+#' * If \eqn{k < \min(1 - 1 / \log_{10}(S), 0.7)}, where \eqn{S} is the
 #'   sample size, the PSIS estimate and the corresponding Monte
 #'   Carlo standard error estimate are reliable.
 #'
-#' * If \eqn{1 - 1 / log10(S) <= k < 0.7}, the PSIS estimate and the
+#' * If \eqn{1 - 1 / \log_{10}(S) <= k < 0.7}, the PSIS estimate and the
 #'   corresponding Monte Carlo standard error estimate are not
 #'   reliable, but increasing the (effective) sample size \eqn{S} above
 #'   2200 may help (this will increase the sample size specific
-#'   threshold \eqn{(1 - 1 / log10(2200) > 0.7} and then the bias specific
+#'   threshold \eqn{(1 - 1 / \log_{10}(2200) > 0.7} and then the bias specific
 #'   threshold 0.7 dominates).
 #'
 #' * If \eqn{0.7 <= k < 1}, the PSIS estimate and the corresponding Monte

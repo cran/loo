@@ -12,7 +12,7 @@
 
 <meta name="author" content="Topi Paananen, Paul Bürkner, Aki Vehtari and Jonah Gabry" />
 
-<meta name="date" content="2024-02-24" />
+<meta name="date" content="2024-07-03" />
 
 <title>Avoiding model refits in leave-one-out cross-validation with moment matching</title>
 
@@ -51,7 +51,7 @@ overflow: visible;
 </style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -342,7 +342,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 cross-validation with moment matching</h1>
 <h4 class="author">Topi Paananen, Paul Bürkner, Aki Vehtari and Jonah
 Gabry</h4>
-<h4 class="date">2024-02-24</h4>
+<h4 class="date">2024-07-03</h4>
 
 
 <div id="TOC">
@@ -399,8 +399,8 @@ model evaluation using leave-one-out cross-validation and WAIC.
 | <a href="https://arxiv.org/abs/1507.04544">arXiv
 preprint</a>.</p></li>
 <li><p>Vehtari, A., Simpson, D., Gelman, A., Yao, Y., and Gabry, J.
-(2022). Pareto smoothed importance sampling. <a href="https://arxiv.org/abs/1507.02646">arXiv preprint
-arXiv:1507.02646</a>.</p></li>
+(2024). Pareto smoothed importance sampling. <em>Journal of Machine
+Learning Research</em>, 25(72):1-58. <a href="https://jmlr.org/papers/v25/19-556.html">PDF</a></p></li>
 </ul>
 </div>
 <div id="example-eradication-of-roaches" class="section level1">
@@ -486,7 +486,7 @@ beta[1]  0.16       0 0.00  0.16  0.16  0.16  0.16  0.16  2344    1
 beta[2] -0.57       0 0.03 -0.62 -0.59 -0.57 -0.55 -0.52  2395    1
 beta[3] -0.31       0 0.03 -0.38 -0.34 -0.31 -0.29 -0.25  2135    1
 
-Samples were drawn using NUTS(diag_e) at Sat Feb 24 14:38:59 2024.
+Samples were drawn using NUTS(diag_e) at Wed Jul  3 10:22:19 2024.
 For each parameter, n_eff is a crude measure of effective sample size,
 and Rhat is the potential scale reduction factor on split chains (at 
 convergence, Rhat=1).</code></pre>
@@ -554,7 +554,7 @@ Computed from 4000 by 262 log-likelihood matrix.
 
          Estimate     SE
 elpd_loo  -5478.8  700.0
-p_loo       269.8   61.5
+p_loo       278.2   63.2
 looic     10957.7 1400.1
 ------
 MCSE of elpd_loo is 0.4.
@@ -706,7 +706,7 @@ Computed from 4000 by 262 log-likelihood matrix.
 
          Estimate     SE
 elpd_loo  -5478.8  700.0
-p_loo       269.8   61.5
+p_loo       278.2   63.2
 looic     10957.7 1400.1
 ------
 MCSE of elpd_loo is 0.4.
@@ -732,9 +732,9 @@ model evaluation using leave-one-out cross-validation and WAIC.
 <em>Statistics and Computing</em>. 27(5), 1413–1432.
 :10.1007/s11222-016-9696-4. Links: <a href="https://link.springer.com/article/10.1007/s11222-016-9696-4">published</a>
 | <a href="https://arxiv.org/abs/1507.04544">arXiv preprint</a>.</p>
-<p>Vehtari, A., Simpson, D., Gelman, A., Yao, Y., and Gabry, J. (2022).
-Pareto smoothed importance sampling. <a href="https://arxiv.org/abs/1507.02646">arXiv preprint
-arXiv:1507.02646</a>.</p>
+<p>Vehtari, A., Simpson, D., Gelman, A., Yao, Y., and Gabry, J. (2024).
+Pareto smoothed importance sampling. <em>Journal of Machine Learning
+Research</em>, 25(72):1-58. <a href="https://jmlr.org/papers/v25/19-556.html">PDF</a></p>
 </div>
 
 

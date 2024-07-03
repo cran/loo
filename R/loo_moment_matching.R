@@ -195,7 +195,7 @@ loo_moment_match.default <- function(x, loo, post_draws, log_lik_i,
 #' @param i observation number.
 #' @param x A fitted model object.
 #' @param log_lik_i A function that takes `x` and `i` and returns a matrix (one
-#'   column per chain) or a vector (all chains stacked) of log-likeliood draws
+#'   column per chain) or a vector (all chains stacked) of log-likelihood draws
 #'   of the `i`th observation based on the model `x`. If the draws are obtained
 #'   using MCMC, the matrix with MCMC chains separated is preferred.
 #' @param unconstrain_pars A function that takes arguments `x`, and `pars` and
@@ -258,6 +258,7 @@ loo_moment_match_i <- function(i,
   dim(log_liki) <- c(S_per_chain, N_chains, 1)
   r_eff_i <- loo::relative_eff(exp(log_liki), cores = 1)
   dim(log_liki) <- NULL
+  lpd <- matrixStats::logSumExp(log_liki) - log(length(log_liki))
 
   is_obj <- suppressWarnings(importance_sampling.default(-log_liki,
                                                          method = is_method,
@@ -285,7 +286,7 @@ loo_moment_match_i <- function(i,
     # 1. match means
     trans <- shift(x, uparsi, lwi)
     # gather updated quantities
-    quantities_i <- update_quantities_i(x, trans$upars,  i = i,
+    quantities_i <- try(update_quantities_i(x, trans$upars,  i = i,
                                         orig_log_prob = orig_log_prob,
                                         log_prob_upars = log_prob_upars,
                                         log_lik_i_upars = log_lik_i_upars,
@@ -293,6 +294,12 @@ loo_moment_match_i <- function(i,
                                         cores = 1,
                                         is_method = is_method,
                                         ...)
+                        )
+    if (inherits(quantities_i, "try-error")) {
+      # Stan log prob caused an exception probably due to under- or
+      # overflow of parameters to invalid values
+      break
+    }
     if (quantities_i$ki < ki) {
       uparsi <- trans$upars
       total_shift <- total_shift + trans$shift
@@ -309,7 +316,7 @@ loo_moment_match_i <- function(i,
     # 2. match means and marginal variances
     trans <- shift_and_scale(x, uparsi, lwi)
     # gather updated quantities
-    quantities_i <- update_quantities_i(x, trans$upars,  i = i,
+    quantities_i <- try(update_quantities_i(x, trans$upars,  i = i,
                                         orig_log_prob = orig_log_prob,
                                         log_prob_upars = log_prob_upars,
                                         log_lik_i_upars = log_lik_i_upars,
@@ -317,6 +324,12 @@ loo_moment_match_i <- function(i,
                                         cores = 1,
                                         is_method = is_method,
                                         ...)
+                        )
+    if (inherits(quantities_i, "try-error")) {
+      # Stan log prob caused an exception probably due to under- or
+      # overflow of parameters to invalid values
+      break
+    }
     if (quantities_i$ki < ki) {
       uparsi <- trans$upars
       total_shift <- total_shift + trans$shift
@@ -335,7 +348,7 @@ loo_moment_match_i <- function(i,
     if (cov) {
       trans <- shift_and_cov(x, uparsi, lwi)
       # gather updated quantities
-      quantities_i <- update_quantities_i(x, trans$upars,  i = i,
+      quantities_i <- try(update_quantities_i(x, trans$upars,  i = i,
                                           orig_log_prob = orig_log_prob,
                                           log_prob_upars = log_prob_upars,
                                           log_lik_i_upars = log_lik_i_upars,
@@ -343,7 +356,13 @@ loo_moment_match_i <- function(i,
                                           cores = 1,
                                           is_method = is_method,
                                           ...)
+                          )
 
+      if (inherits(quantities_i, "try-error")) {
+        # Stan log prob caused an exception probably due to under- or
+        # overflow of parameters to invalid values
+        break
+      }
       if (quantities_i$ki < ki) {
         uparsi <- trans$upars
         total_shift <- total_shift + trans$shift
@@ -385,10 +404,8 @@ loo_moment_match_i <- function(i,
     dim(log_liki) <- NULL
   }
 
-
   # pointwise estimates
   elpd_loo_i <- matrixStats::logSumExp(log_liki + lwi)
-  lpd <- matrixStats::logSumExp(log_liki) - log(length(log_liki))
   mcse_elpd_loo <- mcse_elpd(
     ll = as.matrix(log_liki), lw = as.matrix(lwi),
     E_elpd = exp(elpd_loo_i), r_eff = r_eff_i
@@ -423,7 +440,7 @@ loo_moment_match_i <- function(i,
 #'   `upars` and returns a matrix of log-posterior density values of the
 #'   unconstrained posterior draws passed via `upars`.
 #' @param log_lik_i_upars A function that takes arguments `x`, `upars`,
-#'   and `i` and returns a vector of log-likeliood draws of the `i`th
+#'   and `i` and returns a vector of log-likelihood draws of the `i`th
 #'   observation based on the unconstrained posterior draws passed via
 #'   `upars`.
 #' @param r_eff_i MCMC effective sample size divided by the total sample size
@@ -439,17 +456,18 @@ update_quantities_i <- function(x, upars, i, orig_log_prob,
   log_liki_new <- log_lik_i_upars(x, upars = upars, i = i, ...)
   # compute new log importance weights
 
-  is_obj_new <- suppressWarnings(importance_sampling.default(-log_liki_new +
-                                                               log_prob_new -
-                                                               orig_log_prob,
+  # If log_liki_new and log_prob_new both have same element as Inf,
+  # replace the log ratio with -Inf
+  lr <- -log_liki_new + log_prob_new - orig_log_prob
+  lr[is.na(lr)] <- -Inf
+  is_obj_new <- suppressWarnings(importance_sampling.default(lr,
                                                              method = is_method,
                                                              r_eff = r_eff_i,
                                                              cores = 1))
   lwi_new <- as.vector(weights(is_obj_new))
   ki_new <- is_obj_new$diagnostics$pareto_k
 
-  is_obj_f_new <- suppressWarnings(importance_sampling.default(log_prob_new -
-                                                                 orig_log_prob,
+  is_obj_f_new <- suppressWarnings(importance_sampling.default(log_prob_new - orig_log_prob,
                                                                method = is_method,
                                                                r_eff = r_eff_i,
                                                                cores = 1))

@@ -12,7 +12,7 @@
 
 <meta name="author" content="Paul Bürkner, Jonah Gabry, Aki Vehtari" />
 
-<meta name="date" content="2024-02-24" />
+<meta name="date" content="2024-07-03" />
 
 <title>Approximate leave-future-out cross-validation for Bayesian time series models</title>
 
@@ -51,7 +51,7 @@ overflow: visible;
 </style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -341,7 +341,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h1 class="title toc-ignore">Approximate leave-future-out
 cross-validation for Bayesian time series models</h1>
 <h4 class="author">Paul Bürkner, Jonah Gabry, Aki Vehtari</h4>
-<h4 class="date">2024-02-24</h4>
+<h4 class="date">2024-07-03</h4>
 
 
 <div id="TOC">
@@ -408,7 +408,7 @@ like leave-one-out cross-validation (LOO-CV). For a data set with <span class="m
 <span class="math inline">\(N\)</span> observations and assessing how
 well the model predicts the left-out observation. LOO-CV is very
 expensive computationally in most realistic settings, but the Pareto
-smoothed importance sampling (PSIS, Vehtari et al, 2017, 2022) algorithm
+smoothed importance sampling (PSIS, Vehtari et al, 2017, 2024) algorithm
 provided by the <em>loo</em> package allows for approximating exact
 LOO-CV with PSIS-LOO-CV. PSIS-LOO-CV requires only a single fit of the
 full model and comes with diagnostics for assessing the validity of the
@@ -532,7 +532,7 @@ importance sampling will fail. We will refer to this particular value of
 <span class="math inline">\(i\)</span> as <span class="math inline">\(i^\star_1\)</span>. To identify the value of <span class="math inline">\(i^\star_1\)</span>, we check for which value of
 <span class="math inline">\(i\)</span> does the estimated shape
 parameter <span class="math inline">\(k\)</span> of the generalized
-Pareto distribution first cross a certain threshold <span class="math inline">\(\tau\)</span> (Vehtari et al, 2022). Only then do
+Pareto distribution first cross a certain threshold <span class="math inline">\(\tau\)</span> (Vehtari et al, 2024). Only then do
 we refit the model using the observations up to <span class="math inline">\(i^\star_1\)</span> and restart the process from
 there by setting <span class="math inline">\(\theta^{(s)} =
 \theta^{(s)}_{1:i^\star_1}\)</span> and <span class="math inline">\(i^\star = i^\star_1\)</span> until the next
@@ -545,7 +545,7 @@ refitting, and so on. We refit as many times as is required (only when
 observation <span class="math inline">\(i = N - M\)</span>. For LOO,
 assuming posterior sample size is 4000 or larger, we recommend to use a
 threshold of <span class="math inline">\(\tau = 0.7\)</span> (Vehtari et
-al, 2017, 2022) and it turns out this is a reasonable threshold for LFO
+al, 2017, 2024) and it turns out this is a reasonable threshold for LFO
 as well (Bürkner et al. 2020).</p>
 </div>
 <div id="autoregressive-models" class="section level2">
@@ -964,9 +964,9 @@ model evaluation using leave-one-out cross-validation and WAIC.
 :10.1007/s11222-016-9696-4. <a href="https://link.springer.com/article/10.1007/s11222-016-9696-4">Online</a>.
 <a href="https://arxiv.org/abs/1507.04544">arXiv preprint
 arXiv:1507.04544</a>.</p>
-<p>Vehtari, A., Simpson, D., Gelman, A., Yao, Y., and Gabry, J. (2022).
-Pareto smoothed importance sampling. <a href="https://arxiv.org/abs/1507.02646">arXiv preprint
-arXiv:1507.02646</a>.</p>
+<p>Vehtari, A., Simpson, D., Gelman, A., Yao, Y., and Gabry, J. (2024).
+Pareto smoothed importance sampling. <em>Journal of Machine Learning
+Research</em>, 25(72):1-58. <a href="https://jmlr.org/papers/v25/19-556.html">PDF</a></p>
 <p><br /></p>
 </div>
 <div id="appendix" class="section level2">
@@ -974,13 +974,13 @@ arXiv:1507.02646</a>.</p>
 <div id="appendix-session-information" class="section level3">
 <h3>Appendix: Session information</h3>
 <div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
-<pre><code>R version 4.3.1 (2023-06-16)
-Platform: x86_64-apple-darwin20 (64-bit)
-Running under: macOS Big Sur 11.7.10
+<pre><code>R version 4.4.1 (2024-06-14)
+Platform: x86_64-apple-darwin20
+Running under: macOS Sonoma 14.4.1
 
 Matrix products: default
-BLAS:   /Library/Frameworks/R.framework/Versions/4.3-x86_64/Resources/lib/libRblas.0.dylib 
-LAPACK: /Library/Frameworks/R.framework/Versions/4.3-x86_64/Resources/lib/libRlapack.dylib;  LAPACK version 3.11.0
+BLAS:   /Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
 
 locale:
 [1] C/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
@@ -992,46 +992,45 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] ggplot2_3.4.4      brms_2.20.5        bayesplot_1.11.0   rstanarm_2.32.1   
-[5] Rcpp_1.0.11        loo_2.7.0          rstan_2.32.5       StanHeaders_2.32.5
-[9] knitr_1.45.3      
+[1] ggplot2_3.5.1      brms_2.21.0        bayesplot_1.11.1   rstanarm_2.32.1   
+[5] Rcpp_1.0.12        loo_2.8.0          rstan_2.32.6       StanHeaders_2.32.9
+[9] knitr_1.47        
 
 loaded via a namespace (and not attached):
-  [1] gridExtra_2.3        inline_0.3.19        rlang_1.1.3         
-  [4] magrittr_2.0.3       matrixStats_1.2.0    compiler_4.3.1      
-  [7] callr_3.7.3          vctrs_0.6.5          reshape2_1.4.4      
- [10] stringr_1.5.0        pkgconfig_2.0.3      crayon_1.5.2        
- [13] fastmap_1.1.1        backports_1.4.1      ellipsis_0.3.2      
- [16] labeling_0.4.3       utf8_1.2.4           threejs_0.3.3       
- [19] promises_1.2.1       rmarkdown_2.25       markdown_1.11       
- [22] ps_1.7.5             nloptr_2.0.3         xfun_0.41           
- [25] cachem_1.0.8         jsonlite_1.8.7       highr_0.10          
- [28] later_1.3.1          parallel_4.3.1       prettyunits_1.2.0   
- [31] R6_2.5.1             dygraphs_1.1.1.6     bslib_0.5.1         
- [34] stringi_1.7.12       boot_1.3-28.1        jquerylib_0.1.4     
- [37] zoo_1.8-12           base64enc_0.1-3      httpuv_1.6.12       
- [40] Matrix_1.6-4         splines_4.3.1        igraph_1.5.1        
- [43] tidyselect_1.2.0     rstudioapi_0.14      abind_1.4-5         
- [46] yaml_2.3.7           codetools_0.2-19     miniUI_0.1.1.1      
- [49] curl_5.0.1           processx_3.8.2       pkgbuild_1.4.2      
- [52] lattice_0.21-8       tibble_3.2.1         plyr_1.8.9          
- [55] bridgesampling_1.1-2 shiny_1.8.0          withr_3.0.0         
- [58] posterior_1.5.0.9000 coda_0.19-4          evaluate_0.23       
- [61] survival_3.5-5       RcppParallel_5.1.7   xts_0.13.1          
- [64] pillar_1.9.0         tensorA_0.36.2.1     checkmate_2.3.1     
- [67] DT_0.30              stats4_4.3.1         shinyjs_2.1.0       
- [70] distributional_0.4.0 generics_0.1.3       rstantools_2.4.0    
- [73] munsell_0.5.0        scales_1.3.0         minqa_1.2.5         
- [76] gtools_3.9.4         xtable_1.8-4         glue_1.7.0          
- [79] tools_4.3.1          shinystan_2.6.0      lme4_1.1-35.1       
- [82] colourpicker_1.3.0   mvtnorm_1.2-3        grid_4.3.1          
- [85] QuickJSR_1.0.7       crosstalk_1.2.0      colorspace_2.1-0    
- [88] nlme_3.1-162         cli_3.6.2            fansi_1.0.6         
- [91] Brobdingnag_1.2-9    dplyr_1.1.3          V8_4.3.1            
- [94] gtable_0.3.4         sass_0.4.7           digest_0.6.33       
- [97] htmlwidgets_1.6.2    farver_2.1.1         htmltools_0.5.6.1   
-[100] lifecycle_1.0.4      mime_0.12            shinythemes_1.2.0   
-[103] MASS_7.3-60         </code></pre>
+  [1] gridExtra_2.3        inline_0.3.19        rlang_1.1.4         
+  [4] magrittr_2.0.3       matrixStats_1.3.0    compiler_4.4.1      
+  [7] callr_3.7.6          vctrs_0.6.5          reshape2_1.4.4      
+ [10] stringr_1.5.1        pkgconfig_2.0.3      fastmap_1.2.0       
+ [13] backports_1.5.0      labeling_0.4.3       utf8_1.2.4          
+ [16] threejs_0.3.3        promises_1.3.0       rmarkdown_2.27      
+ [19] markdown_1.13        ps_1.7.6             nloptr_2.1.0        
+ [22] xfun_0.45            cachem_1.1.0         jsonlite_1.8.8      
+ [25] highr_0.11           later_1.3.2          parallel_4.4.1      
+ [28] R6_2.5.1             dygraphs_1.1.1.6     bslib_0.7.0         
+ [31] stringi_1.8.4        boot_1.3-30          estimability_1.5.1  
+ [34] jquerylib_0.1.4      zoo_1.8-12           base64enc_0.1-3     
+ [37] httpuv_1.6.15        Matrix_1.7-0         splines_4.4.1       
+ [40] igraph_2.0.3         tidyselect_1.2.1     rstudioapi_0.16.0   
+ [43] abind_1.4-5          yaml_2.3.8           codetools_0.2-20    
+ [46] miniUI_0.1.1.1       processx_3.8.4       pkgbuild_1.4.4      
+ [49] lattice_0.22-6       tibble_3.2.1         plyr_1.8.9          
+ [52] shiny_1.8.1.1        withr_3.0.0          bridgesampling_1.1-2
+ [55] posterior_1.6.0      coda_0.19-4.1        evaluate_0.24.0     
+ [58] survival_3.6-4       RcppParallel_5.1.7   xts_0.14.0          
+ [61] pillar_1.9.0         tensorA_0.36.2.1     checkmate_2.3.1     
+ [64] DT_0.33              stats4_4.4.1         shinyjs_2.1.0       
+ [67] distributional_0.4.0 generics_0.1.3       rstantools_2.4.0    
+ [70] munsell_0.5.1        scales_1.3.0         minqa_1.2.7         
+ [73] gtools_3.9.5         xtable_1.8-4         glue_1.7.0          
+ [76] emmeans_1.10.2       tools_4.4.1          shinystan_2.6.0     
+ [79] lme4_1.1-35.4        colourpicker_1.3.0   mvtnorm_1.2-5       
+ [82] grid_4.4.1           QuickJSR_1.2.2       crosstalk_1.2.1     
+ [85] colorspace_2.1-0     nlme_3.1-164         cli_3.6.3           
+ [88] fansi_1.0.6          Brobdingnag_1.2-9    dplyr_1.1.4         
+ [91] gtable_0.3.5         sass_0.4.9           digest_0.6.36       
+ [94] htmlwidgets_1.6.4    farver_2.1.2         htmltools_0.5.8.1   
+ [97] lifecycle_1.0.4      mime_0.12            shinythemes_1.2.0   
+[100] MASS_7.3-60.2       </code></pre>
 </div>
 <div id="appendix-licenses" class="section level3">
 <h3>Appendix: Licenses</h3>
