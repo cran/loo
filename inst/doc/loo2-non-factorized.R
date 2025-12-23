@@ -22,31 +22,31 @@ knitr::opts_chunk$set(
 )
 
 ## ----lpdf, eval=FALSE---------------------------------------------------------
-#  /**
-#   * Normal log-pdf for spatially lagged responses
-#   *
-#   * @param y Vector of response values.
-#   * @param mu Mean parameter vector.
-#   * @param sigma Positive scalar residual standard deviation.
-#   * @param rho Positive scalar autoregressive parameter.
-#   * @param W Spatial weight matrix.
-#   *
-#   * @return A scalar to be added to the log posterior.
-#   */
-#  real normal_lagsar_lpdf(vector y, vector mu, real sigma,
-#                          real rho, matrix W) {
-#    int N = rows(y);
-#    real inv_sigma2 = 1 / square(sigma);
-#    matrix[N, N] W_tilde = -rho * W;
-#    vector[N] half_pred;
-#  
-#    for (n in 1:N) W_tilde[n,n] += 1;
-#  
-#    half_pred = W_tilde * (y - mdivide_left(W_tilde, mu));
-#  
-#    return 0.5 * log_determinant(crossprod(W_tilde) * inv_sigma2) -
-#           0.5 * dot_self(half_pred) * inv_sigma2;
-#  }
+# /**
+#  * Normal log-pdf for spatially lagged responses
+#  *
+#  * @param y Vector of response values.
+#  * @param mu Mean parameter vector.
+#  * @param sigma Positive scalar residual standard deviation.
+#  * @param rho Positive scalar autoregressive parameter.
+#  * @param W Spatial weight matrix.
+#  *
+#  * @return A scalar to be added to the log posterior.
+#  */
+# real normal_lagsar_lpdf(vector y, vector mu, real sigma,
+#                         real rho, matrix W) {
+#   int N = rows(y);
+#   real inv_sigma2 = 1 / square(sigma);
+#   matrix[N, N] W_tilde = -rho * W;
+#   vector[N] half_pred;
+# 
+#   for (n in 1:N) W_tilde[n,n] += 1;
+# 
+#   half_pred = W_tilde * (y - mdivide_left(W_tilde, mu));
+# 
+#   return 0.5 * log_determinant(crossprod(W_tilde) * inv_sigma2) -
+#          0.5 * dot_self(half_pred) * inv_sigma2;
+# }
 
 ## ----setup, cache=FALSE-------------------------------------------------------
 library("loo")
@@ -207,74 +207,74 @@ without_pt_4 <- c(
 round(without_pt_4, 1)
 
 ## ----brms-stan-code, eval=FALSE-----------------------------------------------
-#  // generated with brms 2.2.0
-#  functions {
-#  /**
-#   * Normal log-pdf for spatially lagged responses
-#   *
-#   * @param y Vector of response values.
-#   * @param mu Mean parameter vector.
-#   * @param sigma Positive scalar residual standard deviation.
-#   * @param rho Positive scalar autoregressive parameter.
-#   * @param W Spatial weight matrix.
-#   *
-#   * @return A scalar to be added to the log posterior.
-#   */
-#    real normal_lagsar_lpdf(vector y, vector mu, real sigma,
-#                            real rho, matrix W) {
-#      int N = rows(y);
-#      real inv_sigma2 = 1 / square(sigma);
-#      matrix[N, N] W_tilde = -rho * W;
-#      vector[N] half_pred;
-#      for (n in 1:N) W_tilde[n, n] += 1;
-#      half_pred = W_tilde * (y - mdivide_left(W_tilde, mu));
-#      return 0.5 * log_determinant(crossprod(W_tilde) * inv_sigma2) -
-#             0.5 * dot_self(half_pred) * inv_sigma2;
-#    }
-#  }
-#  data {
-#    int<lower=1> N;  // total number of observations
-#    vector[N] Y;  // response variable
-#    int<lower=0> Nmi;  // number of missings
-#    int<lower=1> Jmi[Nmi];  // positions of missings
-#    int<lower=1> K;  // number of population-level effects
-#    matrix[N, K] X;  // population-level design matrix
-#    matrix[N, N] W;  // spatial weight matrix
-#    int prior_only;  // should the likelihood be ignored?
-#  }
-#  transformed data {
-#    int Kc = K - 1;
-#    matrix[N, K - 1] Xc;  // centered version of X
-#    vector[K - 1] means_X;  // column means of X before centering
-#    for (i in 2:K) {
-#      means_X[i - 1] = mean(X[, i]);
-#      Xc[, i - 1] = X[, i] - means_X[i - 1];
-#    }
-#  }
-#  parameters {
-#    vector[Nmi] Ymi;  // estimated missings
-#    vector[Kc] b;  // population-level effects
-#    real temp_Intercept;  // temporary intercept
-#    real<lower=0> sigma;  // residual SD
-#    real<lower=0,upper=1> lagsar;  // SAR parameter
-#  }
-#  transformed parameters {
-#  }
-#  model {
-#    vector[N] Yl = Y;
-#    vector[N] mu = Xc * b + temp_Intercept;
-#    Yl[Jmi] = Ymi;
-#    // priors including all constants
-#    target += student_t_lpdf(temp_Intercept | 3, 34, 17);
-#    target += student_t_lpdf(sigma | 3, 0, 17)
-#      - 1 * student_t_lccdf(0 | 3, 0, 17);
-#    // likelihood including all constants
-#    if (!prior_only) {
-#      target += normal_lagsar_lpdf(Yl | mu, sigma, lagsar, W);
-#    }
-#  }
-#  generated quantities {
-#    // actual population-level intercept
-#    real b_Intercept = temp_Intercept - dot_product(means_X, b);
-#  }
+# // generated with brms 2.2.0
+# functions {
+# /**
+#  * Normal log-pdf for spatially lagged responses
+#  *
+#  * @param y Vector of response values.
+#  * @param mu Mean parameter vector.
+#  * @param sigma Positive scalar residual standard deviation.
+#  * @param rho Positive scalar autoregressive parameter.
+#  * @param W Spatial weight matrix.
+#  *
+#  * @return A scalar to be added to the log posterior.
+#  */
+#   real normal_lagsar_lpdf(vector y, vector mu, real sigma,
+#                           real rho, matrix W) {
+#     int N = rows(y);
+#     real inv_sigma2 = 1 / square(sigma);
+#     matrix[N, N] W_tilde = -rho * W;
+#     vector[N] half_pred;
+#     for (n in 1:N) W_tilde[n, n] += 1;
+#     half_pred = W_tilde * (y - mdivide_left(W_tilde, mu));
+#     return 0.5 * log_determinant(crossprod(W_tilde) * inv_sigma2) -
+#            0.5 * dot_self(half_pred) * inv_sigma2;
+#   }
+# }
+# data {
+#   int<lower=1> N;  // total number of observations
+#   vector[N] Y;  // response variable
+#   int<lower=0> Nmi;  // number of missings
+#   int<lower=1> Jmi[Nmi];  // positions of missings
+#   int<lower=1> K;  // number of population-level effects
+#   matrix[N, K] X;  // population-level design matrix
+#   matrix[N, N] W;  // spatial weight matrix
+#   int prior_only;  // should the likelihood be ignored?
+# }
+# transformed data {
+#   int Kc = K - 1;
+#   matrix[N, K - 1] Xc;  // centered version of X
+#   vector[K - 1] means_X;  // column means of X before centering
+#   for (i in 2:K) {
+#     means_X[i - 1] = mean(X[, i]);
+#     Xc[, i - 1] = X[, i] - means_X[i - 1];
+#   }
+# }
+# parameters {
+#   vector[Nmi] Ymi;  // estimated missings
+#   vector[Kc] b;  // population-level effects
+#   real temp_Intercept;  // temporary intercept
+#   real<lower=0> sigma;  // residual SD
+#   real<lower=0,upper=1> lagsar;  // SAR parameter
+# }
+# transformed parameters {
+# }
+# model {
+#   vector[N] Yl = Y;
+#   vector[N] mu = Xc * b + temp_Intercept;
+#   Yl[Jmi] = Ymi;
+#   // priors including all constants
+#   target += student_t_lpdf(temp_Intercept | 3, 34, 17);
+#   target += student_t_lpdf(sigma | 3, 0, 17)
+#     - 1 * student_t_lccdf(0 | 3, 0, 17);
+#   // likelihood including all constants
+#   if (!prior_only) {
+#     target += normal_lagsar_lpdf(Yl | mu, sigma, lagsar, W);
+#   }
+# }
+# generated quantities {
+#   // actual population-level intercept
+#   real b_Intercept = temp_Intercept - dot_product(means_X, b);
+# }
 
